@@ -541,31 +541,50 @@ function applyRemoteFirebaseData(remoteData) {
 function updateFirebaseSyncStatusUI(status) {
   const syncPill = document.getElementById('cloudSyncIndicator');
   const syncLabel = document.getElementById('cloudSyncUserLabel');
+  const displayUserName = document.getElementById('displayUserName');
   const displayUserId = document.getElementById('displayUserId');
   const statusIndicator = document.getElementById('firebaseStatusIndicator');
   const statusText = document.getElementById('firebaseStatusText');
 
-  const userId = status.userId || (window.FirebaseSync ? window.FirebaseSync.getUserId() : 'user_local');
-  const shortId = userId.length > 10 ? `${userId.substring(0, 10)}...` : userId;
+  const account = window.FirebaseSync ? window.FirebaseSync.getAccount() : null;
+  const userId = status.userId || (account ? account.userId : '');
+  const displayName = status.displayName || (account ? account.displayName : 'Belum Terdaftar');
 
-  if (displayUserId) displayUserId.textContent = userId;
+  if (displayUserName) {
+    displayUserName.textContent = `Pengguna: ${displayName}`;
+  }
+  if (displayUserId) {
+    displayUserId.textContent = userId ? userId : 'Belum Terdaftar';
+  }
 
-  if (status.connected) {
+  const labelText = displayName.length > 10 ? `${displayName.substring(0, 10)}...` : displayName;
+
+  if (status.connected && userId) {
     if (syncPill) {
       syncPill.className = 'status-pill sync-pill';
-      syncPill.title = `Firebase Realtime Terhubung • Akun: ${userId}`;
+      syncPill.title = `Firebase Realtime Terhubung • ${displayName} (${userId})`;
     }
-    if (syncLabel) syncLabel.textContent = shortId;
+    if (syncLabel) syncLabel.textContent = labelText;
     if (statusIndicator) {
       statusIndicator.className = 'sync-status-indicator';
     }
     if (statusText) statusText.textContent = '🟢 Terhubung (Realtime)';
+  } else if (!userId) {
+    if (syncPill) {
+      syncPill.className = 'status-pill sync-pill connecting';
+      syncPill.title = 'Perangkat Belum Terdaftar: Klik untuk mendaftar';
+    }
+    if (syncLabel) syncLabel.textContent = 'Daftar Akun';
+    if (statusIndicator) {
+      statusIndicator.className = 'sync-status-indicator connecting';
+    }
+    if (statusText) statusText.textContent = '🟡 Belum Terdaftar';
   } else if (status.error) {
     if (syncPill) {
       syncPill.className = 'status-pill sync-pill error';
       syncPill.title = `Koneksi Firebase: ${status.error}`;
     }
-    if (syncLabel) syncLabel.textContent = 'Offline';
+    if (syncLabel) syncLabel.textContent = `${labelText} (Offline)`;
     if (statusIndicator) {
       statusIndicator.className = 'sync-status-indicator offline';
     }
@@ -573,9 +592,9 @@ function updateFirebaseSyncStatusUI(status) {
   } else {
     if (syncPill) {
       syncPill.className = 'status-pill sync-pill connecting';
-      syncPill.title = `Menghubungkan ke Firebase... (Akun: ${userId})`;
+      syncPill.title = `Menghubungkan ke Firebase... (${userId})`;
     }
-    if (syncLabel) syncLabel.textContent = shortId;
+    if (syncLabel) syncLabel.textContent = labelText;
     if (statusIndicator) {
       statusIndicator.className = 'sync-status-indicator connecting';
     }
@@ -583,9 +602,106 @@ function updateFirebaseSyncStatusUI(status) {
   }
 }
 
+let onboardingMode = 'new'; // 'new' | 'existing'
+
+function setupOnboardingModal() {
+  const form = document.getElementById('onboardingForm');
+  const inputName = document.getElementById('inputOnboardingName');
+  const inputUserId = document.getElementById('inputOnboardingUserId');
+  const randomBtn = document.getElementById('generateRandomIdBtn');
+  const modeTabNew = document.getElementById('modeTabNew');
+  const modeTabExisting = document.getElementById('modeTabExisting');
+  const groupDisplayName = document.getElementById('groupDisplayName');
+  const submitBtnText = document.getElementById('submitBtnText');
+  const hintEl = document.getElementById('onboardingIdHint');
+
+  modeTabNew?.addEventListener('click', () => {
+    onboardingMode = 'new';
+    modeTabNew.classList.add('active');
+    modeTabExisting?.classList.remove('active');
+    if (groupDisplayName) groupDisplayName.style.display = 'block';
+    if (inputName) inputName.required = true;
+    if (submitBtnText) submitBtnText.textContent = 'Daftarkan & Mulai Belanja';
+    if (hintEl) hintEl.textContent = 'ID unik untuk memisahkan database belanja perangkat ini di cloud.';
+    playSound('tick');
+  });
+
+  modeTabExisting?.addEventListener('click', () => {
+    onboardingMode = 'existing';
+    modeTabExisting?.classList.add('active');
+    modeTabNew?.classList.remove('active');
+    if (groupDisplayName) groupDisplayName.style.display = 'none';
+    if (inputName) inputName.required = false;
+    if (submitBtnText) submitBtnText.textContent = 'Masuk dengan ID Ini';
+    if (hintEl) hintEl.textContent = 'Masukkan ID akun dari perangkat lain untuk sinkronisasi daftar belanja bersama.';
+    playSound('tick');
+  });
+
+  randomBtn?.addEventListener('click', () => {
+    const name = inputName?.value || 'user';
+    if (window.FirebaseSync && inputUserId) {
+      inputUserId.value = window.FirebaseSync.generateSuggestedUserId(name);
+      inputUserId.dataset.auto = 'true';
+      playSound('tick');
+    }
+  });
+
+  inputName?.addEventListener('input', () => {
+    if (onboardingMode === 'new' && inputUserId && (!inputUserId.value || inputUserId.dataset.auto === 'true')) {
+      const suggested = window.FirebaseSync ? window.FirebaseSync.generateSuggestedUserId(inputName.value) : `user_${inputName.value.toLowerCase().replace(/[^a-z0-9]/g, '')}`;
+      inputUserId.value = suggested;
+      inputUserId.dataset.auto = 'true';
+    }
+  });
+
+  inputUserId?.addEventListener('input', () => {
+    inputUserId.dataset.auto = 'false';
+  });
+
+  form?.addEventListener('submit', (e) => {
+    e.preventDefault();
+
+    let name = inputName?.value.trim() || '';
+    let rawUserId = inputUserId?.value.trim() || '';
+
+    if (!rawUserId) {
+      rawUserId = window.FirebaseSync ? window.FirebaseSync.generateSuggestedUserId(name || 'user') : 'user_' + Math.random().toString(36).substring(2, 7);
+    }
+
+    // Normalize userId (lowercase, only a-z 0-9 _ -)
+    let cleanUserId = rawUserId.toLowerCase().replace(/[^a-z0-9_-]/g, '');
+    if (cleanUserId.length < 2) {
+      cleanUserId = 'user_' + Math.random().toString(36).substring(2, 6);
+    }
+
+    const displayName = (onboardingMode === 'existing' && !name) ? cleanUserId : (name || cleanUserId);
+
+    // 1. Immediately register in local storage & attach listener
+    if (window.FirebaseSync) {
+      window.FirebaseSync.registerUser({ userId: cleanUserId, displayName });
+      // Save state to Firebase in background
+      window.FirebaseSync.saveFullState(state);
+    }
+
+    // 2. IMMEDIATELY CLOSE ONBOARDING MODAL & SWITCH TO BELANJA PAGE
+    hideModal('onboardingModal');
+    switchTab('tabBelanja');
+
+    playSound('success');
+    triggerHaptic(60);
+    showToast(`Selamat datang, ${displayName}! Akun siap digunakan.`, 'success');
+
+    // 3. Update UI readouts
+    updateFirebaseSyncStatusUI({ connected: true, userId: cleanUserId, displayName });
+    renderCartItems();
+    updateSafetyCapUI();
+  });
+}
+
 function setupFirebaseIntegration() {
   if (!window.FirebaseSync) return;
 
+  // Initialize callback listeners
   window.FirebaseSync.init({
     onStatusChanged: (status) => {
       updateFirebaseSyncStatusUI(status);
@@ -595,18 +711,32 @@ function setupFirebaseIntegration() {
     }
   });
 
-  // Check if first-time user and upload initial state if needed
-  setTimeout(async () => {
-    if (window.FirebaseSync && window.FirebaseSync.isAvailable()) {
-      window.FirebaseSync.saveFullState(state);
-    }
-  }, 1200);
+  // Setup modal handlers
+  setupOnboardingModal();
 
-  // Setup Account Card button events
+  // MANDATORY FIRST-TIME REGISTRATION CHECK:
+  // If user has not yet registered an account on this device, display onboarding modal immediately
+  if (!window.FirebaseSync.isRegistered()) {
+    const inputUserId = document.getElementById('inputOnboardingUserId');
+    if (inputUserId && !inputUserId.value) {
+      inputUserId.value = window.FirebaseSync.generateSuggestedUserId('user');
+      inputUserId.dataset.auto = 'true';
+    }
+    showModal('onboardingModal');
+  } else {
+    const acc = window.FirebaseSync.getAccount();
+    updateFirebaseSyncStatusUI({ connected: true, userId: acc.userId, displayName: acc.displayName });
+  }
+
+  // Setup Account Card buttons
   const copyBtn = document.getElementById('copyUserIdBtn');
   if (copyBtn) {
     copyBtn.addEventListener('click', () => {
       const uid = window.FirebaseSync.getUserId();
+      if (!uid) {
+        showToast('Belum ada ID Akun terdaftar.', 'error');
+        return;
+      }
       navigator.clipboard.writeText(uid).then(() => {
         showToast(`ID Akun "${uid}" disalin ke clipboard!`, 'success');
         playSound('tick');
@@ -619,36 +749,43 @@ function setupFirebaseIntegration() {
   const switchBtn = document.getElementById('switchUserIdBtn');
   if (switchBtn) {
     switchBtn.addEventListener('click', () => {
-      const cur = window.FirebaseSync.getUserId();
-      const input = prompt('Masukkan ID Akun perangkat yang ingin Anda hubungkan (misal: user_abc123):', cur);
-      if (input && input.trim() && input.trim() !== cur) {
-        window.FirebaseSync.setUserId(input.trim());
-        updateFirebaseSyncStatusUI({ connected: true, userId: input.trim() });
-        showToast(`Beralih ke ID Akun: ${input.trim()}`, 'success');
-        playSound('success');
+      const modeTabExisting = document.getElementById('modeTabExisting');
+      if (modeTabExisting) modeTabExisting.click();
+      showModal('onboardingModal');
+    });
+  }
+
+  const logoutBtn = document.getElementById('logoutUserBtn');
+  if (logoutBtn) {
+    logoutBtn.addEventListener('click', () => {
+      if (confirm('Keluar dari akun perangkat ini dan mendaftarkan akun baru?')) {
+        window.FirebaseSync.logoutOrSwitch();
+        const modeTabNew = document.getElementById('modeTabNew');
+        if (modeTabNew) modeTabNew.click();
+        const inputName = document.getElementById('inputOnboardingName');
+        const inputUserId = document.getElementById('inputOnboardingUserId');
+        if (inputName) inputName.value = '';
+        if (inputUserId) {
+          inputUserId.value = window.FirebaseSync.generateSuggestedUserId('user');
+          inputUserId.dataset.auto = 'true';
+        }
+        showModal('onboardingModal');
+        showToast('Silakan daftarkan akun baru untuk perangkat ini.', 'info');
+        playSound('click');
       }
     });
   }
 
-  const newBtn = document.getElementById('newUserIdBtn');
-  if (newBtn) {
-    newBtn.addEventListener('click', () => {
-      if (confirm('Buat ID Akun baru untuk perangkat ini? Troli belanja akan dimulai terpisah dari ID sebelumnya.')) {
-        window.FirebaseSync.generateNewUser();
-        const newId = window.FirebaseSync.getUserId();
-        updateFirebaseSyncStatusUI({ connected: true, userId: newId });
-        showToast(`ID Akun baru dibuat: ${newId}`, 'success');
-        playSound('success');
-      }
-    });
-  }
-
-  // Clicking sync pill in header takes user to Tab Anggaran & focuses account card
+  // Clicking sync pill in header takes user to Tab Anggaran
   const syncPill = document.getElementById('cloudSyncIndicator');
   if (syncPill) {
     syncPill.addEventListener('click', () => {
-      switchTab('tabAnggaran');
-      document.querySelector('.firebase-account-card')?.scrollIntoView({ behavior: 'smooth' });
+      if (!window.FirebaseSync.isRegistered()) {
+        showModal('onboardingModal');
+      } else {
+        switchTab('tabAnggaran');
+        document.querySelector('.firebase-account-card')?.scrollIntoView({ behavior: 'smooth' });
+      }
     });
   }
 }
@@ -1504,9 +1641,11 @@ function renderAnggaranTab() {
   renderBenchmarkList();
 
   // Device Account & Cloud Sync Info
+  const displayUserName = document.getElementById('displayUserName');
   const displayUserId = document.getElementById('displayUserId');
-  if (displayUserId && window.FirebaseSync) {
-    displayUserId.textContent = window.FirebaseSync.getUserId();
+  if (window.FirebaseSync) {
+    if (displayUserName) displayUserName.textContent = `Pengguna: ${window.FirebaseSync.getDisplayName()}`;
+    if (displayUserId) displayUserId.textContent = window.FirebaseSync.getUserId() || 'Belum Terdaftar';
   }
 }
 
@@ -1677,6 +1816,9 @@ function switchTab(tabId) {
 function showModal(modalId) {
   const modal = document.getElementById(modalId);
   if (modal) {
+    modal.style.display = 'flex';
+    modal.style.pointerEvents = 'auto';
+    void modal.offsetHeight;
     modal.classList.add('open');
     modal.setAttribute('aria-hidden', 'false');
   }
@@ -1687,12 +1829,22 @@ function hideModal(modalId) {
   if (modal) {
     modal.classList.remove('open');
     modal.setAttribute('aria-hidden', 'true');
+    modal.style.pointerEvents = 'none';
+    setTimeout(() => {
+      if (!modal.classList.contains('open')) {
+        modal.style.display = 'none';
+      }
+    }, 280);
   }
 }
 
 function setupModalClosers() {
   document.querySelectorAll('.modal-overlay').forEach(modal => {
     modal.addEventListener('click', (e) => {
+      // Do not allow clicking outside to close onboarding modal if user is not registered
+      if (modal.id === 'onboardingModal' && window.FirebaseSync && !window.FirebaseSync.isRegistered()) {
+        return;
+      }
       if (e.target === modal) {
         hideModal(modal.id);
       }

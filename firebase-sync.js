@@ -1,7 +1,7 @@
 /**
  * SMART GROCERY & BUDGET SAFETY TRACKER
  * Firebase Realtime Database Synchronization Engine
- * Handles per-device user isolation, realtime two-way sync, and offline resilience.
+ * Handles per-device user registration, account isolation, and realtime sync.
  */
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
@@ -12,8 +12,7 @@ import {
   get, 
   onValue, 
   remove, 
-  update,
-  onDisconnect 
+  update 
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
 // ===================================================================
@@ -42,36 +41,47 @@ try {
   app = initializeApp(firebaseConfig);
   db = getDatabase(app);
   isFirebaseInitialized = true;
-  console.log("Firebase App & Realtime Database successfully initialized with URL:", firebaseConfig.databaseURL);
+  console.log("Firebase Realtime Database initialized with URL:", firebaseConfig.databaseURL);
 } catch (err) {
   console.error("Firebase initialization failed:", err);
 }
 
 // ===================================================================
-// PER-DEVICE USER ISOLATION
+// PER-DEVICE USER REGISTRATION & ISOLATION
 // ===================================================================
 
-const USER_ID_STORAGE_KEY = "smart_grocery_device_user_id_v1";
+const USER_ACCOUNT_STORAGE_KEY = "smart_grocery_user_account_v2";
 
-function generateUserId() {
+function getStoredAccount() {
+  try {
+    const raw = localStorage.getItem(USER_ACCOUNT_STORAGE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (parsed && parsed.userId && parsed.userId.trim()) {
+      return {
+        userId: parsed.userId.trim(),
+        displayName: (parsed.displayName || parsed.userId).trim(),
+        registeredAt: parsed.registeredAt || new Date().toISOString()
+      };
+    }
+  } catch (e) {
+    console.warn("Failed to parse stored user account:", e);
+  }
+  return null;
+}
+
+function generateRandomSuffix(name = "user") {
+  const clean = name.trim().toLowerCase().replace(/[^a-z0-9]/g, "").substring(0, 8);
   const chars = "abcdefghijklmnopqrstuvwxyz0123456789";
-  let randomStr = "";
-  for (let i = 0; i < 8; i++) {
-    randomStr += chars.charAt(Math.floor(Math.random() * chars.length));
+  let rand = "";
+  for (let i = 0; i < 4; i++) {
+    rand += chars.charAt(Math.floor(Math.random() * chars.length));
   }
-  return `user_${randomStr}`;
+  return `${clean || "user"}_${rand}`;
 }
 
-function getOrCreateUserId() {
-  let userId = localStorage.getItem(USER_ID_STORAGE_KEY);
-  if (!userId || !userId.trim()) {
-    userId = generateUserId();
-    localStorage.setItem(USER_ID_STORAGE_KEY, userId);
-  }
-  return userId.trim();
-}
-
-let currentUserId = getOrCreateUserId();
+let currentAccount = getStoredAccount();
+let currentUserId = currentAccount ? currentAccount.userId : null;
 
 // ===================================================================
 // REALTIME SYNC STATE & LISTENERS
@@ -81,8 +91,6 @@ let isOnlineWithFirebase = false;
 let activeListeners = [];
 let onDataCallback = null;
 let onStatusChangeCallback = null;
-
-// Track remote update to prevent echo loops
 let isApplyingRemoteUpdate = false;
 
 /**
@@ -93,8 +101,20 @@ const FirebaseSync = {
     return isFirebaseInitialized && db !== null;
   },
 
+  isRegistered() {
+    return !!currentAccount && !!currentUserId;
+  },
+
+  getAccount() {
+    return currentAccount;
+  },
+
   getUserId() {
-    return currentUserId;
+    return currentUserId || "";
+  },
+
+  getDisplayName() {
+    return currentAccount ? (currentAccount.displayName || currentAccount.userId) : "Tamu";
   },
 
   getDatabaseUrl() {
@@ -108,23 +128,79 @@ const FirebaseSync = {
     return true;
   },
 
-  setUserId(newUserId) {
-    if (!newUserId || !newUserId.trim()) return false;
-    currentUserId = newUserId.trim();
-    localStorage.setItem(USER_ID_STORAGE_KEY, currentUserId);
-    
-    // Detach old listeners and attach to new user node
+  generateSuggestedUserId(name) {
+    return generateRandomSuffix(name);
+  },
+
+  /**
+   * Register or Switch user on this device
+   */
+  registerUser({ userId, displayName }) {
+    if (!userId || !userId.trim()) return false;
+
+    const cleanUserId = userId.trim().toLowerCase().replace(/[^a-z0-9_-]/g, "") || generateRandomSuffix("user");
+    const cleanDisplayName = (displayName || cleanUserId).trim();
+
+    currentAccount = {
+      userId: cleanUserId,
+      displayName: cleanDisplayName,
+      registeredAt: new Date().toISOString()
+    };
+    currentUserId = cleanUserId;
+
+    try {
+      localStorage.setItem(USER_ACCOUNT_STORAGE_KEY, JSON.stringify(currentAccount));
+    } catch (e) {
+      console.warn("Local storage write error:", e);
+    }
+
+    // Attach listeners to new user node
     FirebaseSync.detachListeners();
     FirebaseSync.attachListeners();
-    return true;
+
+    // Save profile to Firebase Realtime Database asynchronously in background
+    if (FirebaseSync.isAvailable()) {
+      update(ref(db, `users/${currentUserId}/profile`), {
+        userId: cleanUserId,
+        displayName: cleanDisplayName,
+        lastActive: new Date().toISOString()
+      }).catch(err => {
+        console.warn("Background Firebase profile save warning:", err);
+      });
+    }
+
+    if (onStatusChangeCallback) {
+      onStatusChangeCallback({
+        connected: isOnlineWithFirebase,
+        userId: currentUserId,
+        displayName: cleanDisplayName
+      });
+    }
+
+    return currentAccount;
   },
 
-  generateNewUser() {
-    const newId = generateUserId();
-    return FirebaseSync.setUserId(newId);
+  /**
+   * Logout / Switch Account: resets local registered account
+   */
+  logoutOrSwitch() {
+    localStorage.removeItem(USER_ACCOUNT_STORAGE_KEY);
+    currentAccount = null;
+    currentUserId = null;
+    FirebaseSync.detachListeners();
+
+    if (onStatusChangeCallback) {
+      onStatusChangeCallback({
+        connected: isOnlineWithFirebase,
+        userId: null,
+        displayName: null
+      });
+    }
   },
 
-  // Setup callbacks
+  /**
+   * Initialize sync engine
+   */
   init({ onDataUpdated, onStatusChanged }) {
     onDataCallback = onDataUpdated;
     onStatusChangeCallback = onStatusChanged;
@@ -134,7 +210,7 @@ const FirebaseSync = {
         onStatusChangeCallback({
           connected: false,
           userId: currentUserId,
-          error: "Firebase initialization error"
+          error: "Firebase gagal terhubung"
         });
       }
       return;
@@ -147,13 +223,16 @@ const FirebaseSync = {
       if (onStatusChangeCallback) {
         onStatusChangeCallback({
           connected: isOnlineWithFirebase,
-          userId: currentUserId
+          userId: currentUserId,
+          displayName: currentAccount?.displayName || null
         });
       }
     });
 
-    // Attach listeners for this user's data
-    FirebaseSync.attachListeners();
+    // If user is already registered, attach listeners
+    if (FirebaseSync.isRegistered()) {
+      FirebaseSync.attachListeners();
+    }
   },
 
   detachListeners() {
@@ -164,7 +243,7 @@ const FirebaseSync = {
   },
 
   attachListeners() {
-    if (!FirebaseSync.isAvailable()) return;
+    if (!FirebaseSync.isAvailable() || !currentUserId) return;
 
     FirebaseSync.detachListeners();
     const userRef = ref(db, `users/${currentUserId}`);
@@ -195,12 +274,30 @@ const FirebaseSync = {
   },
 
   /**
+   * Check if remote user node exists in Firebase
+   */
+  async checkUserExists(userId) {
+    if (!FirebaseSync.isAvailable() || !userId) return false;
+    try {
+      const snap = await get(ref(db, `users/${userId}`));
+      return snap.exists();
+    } catch (e) {
+      return false;
+    }
+  },
+
+  /**
    * Write full state to Firebase
    */
   async saveFullState(fullState) {
-    if (!FirebaseSync.isAvailable() || isApplyingRemoteUpdate) return;
+    if (!FirebaseSync.isAvailable() || isApplyingRemoteUpdate || !currentUserId) return;
     try {
       const payload = {
+        profile: {
+          userId: currentUserId,
+          displayName: currentAccount?.displayName || currentUserId,
+          lastUpdated: new Date().toISOString()
+        },
         cart: fullState.cart || [],
         benchmarks: fullState.benchmarks || [],
         history: fullState.history || [],
@@ -211,17 +308,17 @@ const FirebaseSync = {
         },
         lastUpdated: new Date().toISOString()
       };
-      await set(ref(db, `users/${currentUserId}`), payload);
+      await update(ref(db, `users/${currentUserId}`), payload);
     } catch (err) {
       console.warn("Failed to save full state to Firebase:", err);
     }
   },
 
   /**
-   * CART OPERATIONS: Realtime add, update, delete
+   * CART OPERATIONS: Realtime save, add, remove
    */
   async saveCart(cart) {
-    if (!FirebaseSync.isAvailable() || isApplyingRemoteUpdate) return;
+    if (!FirebaseSync.isAvailable() || isApplyingRemoteUpdate || !currentUserId) return;
     try {
       await set(ref(db, `users/${currentUserId}/cart`), cart || []);
     } catch (err) {
@@ -229,20 +326,9 @@ const FirebaseSync = {
     }
   },
 
-  async addOrUpdateCartItem(item) {
-    if (!FirebaseSync.isAvailable() || isApplyingRemoteUpdate || !item || !item.id) return;
-    try {
-      // Find item in current user's cart array or update directly
-      await set(ref(db, `users/${currentUserId}/cartItems/${item.id}`), item);
-    } catch (err) {
-      console.warn("Failed to add/update cart item to Firebase:", err);
-    }
-  },
-
   async removeCartItem(itemId) {
-    if (!FirebaseSync.isAvailable() || isApplyingRemoteUpdate || !itemId) return;
+    if (!FirebaseSync.isAvailable() || isApplyingRemoteUpdate || !currentUserId || !itemId) return;
     try {
-      // Also remove from cartItems if mapped, or save updated cart
       await remove(ref(db, `users/${currentUserId}/cartItems/${itemId}`));
     } catch (err) {
       console.warn("Failed to remove cart item from Firebase:", err);
@@ -253,7 +339,7 @@ const FirebaseSync = {
    * BENCHMARKS OPERATIONS
    */
   async saveBenchmarks(benchmarks) {
-    if (!FirebaseSync.isAvailable() || isApplyingRemoteUpdate) return;
+    if (!FirebaseSync.isAvailable() || isApplyingRemoteUpdate || !currentUserId) return;
     try {
       await set(ref(db, `users/${currentUserId}/benchmarks`), benchmarks || []);
     } catch (err) {
@@ -265,7 +351,7 @@ const FirebaseSync = {
    * HISTORY OPERATIONS
    */
   async saveHistory(history) {
-    if (!FirebaseSync.isAvailable() || isApplyingRemoteUpdate) return;
+    if (!FirebaseSync.isAvailable() || isApplyingRemoteUpdate || !currentUserId) return;
     try {
       await set(ref(db, `users/${currentUserId}/history`), history || []);
     } catch (err) {
@@ -277,30 +363,11 @@ const FirebaseSync = {
    * SETTINGS OPERATIONS
    */
   async saveSettings(settings) {
-    if (!FirebaseSync.isAvailable() || isApplyingRemoteUpdate) return;
+    if (!FirebaseSync.isAvailable() || isApplyingRemoteUpdate || !currentUserId) return;
     try {
       await update(ref(db, `users/${currentUserId}/settings`), settings || {});
     } catch (err) {
       console.warn("Failed to sync settings to Firebase:", err);
-    }
-  },
-
-  /**
-   * CHECKOUT TRANSACTION: Clears cart, appends history, updates benchmarks
-   */
-  async syncCheckout(newTrip, newBenchmarks) {
-    if (!FirebaseSync.isAvailable() || isApplyingRemoteUpdate) return;
-    try {
-      const updates = {};
-      updates[`users/${currentUserId}/cart`] = [];
-      updates[`users/${currentUserId}/cartItems`] = null;
-      updates[`users/${currentUserId}/benchmarks`] = newBenchmarks;
-      updates[`users/${currentUserId}/lastUpdated`] = new Date().toISOString();
-
-      // Read current history and prepend or set
-      await update(ref(db), updates);
-    } catch (err) {
-      console.warn("Failed to sync checkout to Firebase:", err);
     }
   }
 };
