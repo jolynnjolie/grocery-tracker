@@ -34,6 +34,9 @@
         <div class="status-bar-mockup">
           <span class="status-time" id="clockDisplay">11:26</span>
           <div class="status-icons">
+            <span class="status-pill sync-pill connecting" id="cloudSyncIndicator" title="Status Cloud Firebase: Klik untuk info akun">
+              <i data-lucide="cloud" class="icon-xs"></i> <span id="cloudSyncUserLabel">Sync...</span>
+            </span>
             <span class="status-pill offline-pill" id="offlineIndicator" style="display: none;">
               <i data-lucide="wifi-off"></i> Offline
             </span>
@@ -246,6 +249,43 @@
             <div>
               <h2 class="page-title">Anggaran & Acuan</h2>
               <p class="page-desc">Konfigurasi Safety Cap & Patokan Harga Bulan Lalu</p>
+            </div>
+          </div>
+
+          <!-- Device Account & Firebase Realtime Sync Card -->
+          <div class="settings-card firebase-account-card">
+            <div class="settings-header">
+              <i data-lucide="cloud" class="icon-brand"></i>
+              <div>
+                <h3 class="card-subtitle">Akun Perangkat & Cloud Sync</h3>
+                <p class="card-caption">Tersambung ke Firebase Realtime Database</p>
+              </div>
+            </div>
+
+            <div class="account-box">
+              <div>
+                <span class="account-box-label">ID Akun Perangkat Ini:</span>
+                <div class="account-id-text" id="displayUserId">Memuat...</div>
+              </div>
+              <span class="sync-status-indicator connecting" id="firebaseStatusIndicator">
+                <span class="status-dot"></span> <span id="firebaseStatusText">Menghubungkan...</span>
+              </span>
+            </div>
+
+            <p class="account-info-note">
+              Data belanja Anda tersimpan secara mandiri di cloud. Setiap barang yang ditambah/dihapus langsung tersinkronisasi realtime dan tidak tercampur dengan perangkat lain.
+            </p>
+
+            <div class="account-actions-row">
+              <button class="btn btn-outline btn-sm" id="copyUserIdBtn" type="button">
+                <i data-lucide="copy" class="icon-xs"></i> Salin ID Akun
+              </button>
+              <button class="btn btn-outline btn-sm" id="switchUserIdBtn" type="button">
+                <i data-lucide="user-check" class="icon-xs"></i> Pakai ID Lain
+              </button>
+              <button class="btn btn-ghost btn-sm btn-full-grid" id="newUserIdBtn" type="button" style="color: var(--text-muted); font-size: 11px;">
+                <i data-lucide="refresh-cw" class="icon-xs"></i> Buat ID Akun Baru untuk Perangkat Ini
+              </button>
             </div>
           </div>
 
@@ -783,6 +823,8 @@
   <!-- Toast Notification Container -->
   <div class="toast-container" id="toastContainer"></div>
 
+  <!-- Firebase Realtime Sync Engine -->
+  <script type="module" src="firebase-sync.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

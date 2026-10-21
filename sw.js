@@ -1,8 +1,9 @@
-const CACHE_NAME = 'grocery-tracker-v1';
+const CACHE_NAME = 'grocery-tracker-v2';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
   './style.css',
+  './firebase-sync.js',
   './app.js',
   './manifest.webmanifest',
   './icons/icon-192.png',

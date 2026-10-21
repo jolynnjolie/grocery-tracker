@@ -429,7 +429,7 @@ function loadStateFromStorage() {
   }
 }
 
-function saveStateToStorage() {
+function saveStateToStorage(syncFirebase = true) {
   try {
     localStorage.setItem(STORAGE_KEYS.CART, JSON.stringify(state.cart));
     localStorage.setItem(STORAGE_KEYS.BENCHMARKS, JSON.stringify(state.benchmarks));
@@ -437,8 +437,219 @@ function saveStateToStorage() {
     localStorage.setItem(STORAGE_KEYS.BUDGET, state.budgetLimit.toString());
     localStorage.setItem(STORAGE_KEYS.STORE, state.store);
     localStorage.setItem(STORAGE_KEYS.SOUND, state.soundEnabled.toString());
+
+    if (syncFirebase && window.FirebaseSync && window.FirebaseSync.isAvailable()) {
+      window.FirebaseSync.saveCart(state.cart);
+      window.FirebaseSync.saveBenchmarks(state.benchmarks);
+      window.FirebaseSync.saveHistory(state.history);
+      window.FirebaseSync.saveSettings({
+        budgetLimit: state.budgetLimit,
+        store: state.store,
+        soundEnabled: state.soundEnabled
+      });
+    }
   } catch (err) {
-    console.error('Failed to save to localStorage:', err);
+    console.error('Failed to save to localStorage / Firebase:', err);
+  }
+}
+
+// ===================================================================
+// FIREBASE REALTIME DATABASE SYNC INTEGRATION
+// ===================================================================
+
+let isApplyingRemoteSync = false;
+
+function applyRemoteFirebaseData(remoteData) {
+  if (!remoteData || isApplyingRemoteSync) return;
+  isApplyingRemoteSync = true;
+
+  try {
+    let hasChanged = false;
+
+    // 1. Sync Cart
+    if (remoteData.cart !== undefined) {
+      const remoteCart = Array.isArray(remoteData.cart) 
+        ? remoteData.cart 
+        : (remoteData.cart ? Object.values(remoteData.cart) : []);
+      
+      if (JSON.stringify(remoteCart) !== JSON.stringify(state.cart)) {
+        state.cart = remoteCart;
+        hasChanged = true;
+      }
+    }
+
+    // 2. Sync Benchmarks
+    if (remoteData.benchmarks !== undefined) {
+      const remoteBenchmarks = Array.isArray(remoteData.benchmarks) 
+        ? remoteData.benchmarks 
+        : (remoteData.benchmarks ? Object.values(remoteData.benchmarks) : []);
+      
+      if (remoteBenchmarks.length > 0 && JSON.stringify(remoteBenchmarks) !== JSON.stringify(state.benchmarks)) {
+        state.benchmarks = remoteBenchmarks;
+        hasChanged = true;
+      }
+    }
+
+    // 3. Sync History
+    if (remoteData.history !== undefined) {
+      const remoteHistory = Array.isArray(remoteData.history) 
+        ? remoteData.history 
+        : (remoteData.history ? Object.values(remoteData.history) : []);
+      
+      if (JSON.stringify(remoteHistory) !== JSON.stringify(state.history)) {
+        state.history = remoteHistory;
+        hasChanged = true;
+      }
+    }
+
+    // 4. Sync Settings
+    if (remoteData.settings) {
+      if (typeof remoteData.settings.budgetLimit === 'number' && remoteData.settings.budgetLimit !== state.budgetLimit) {
+        state.budgetLimit = remoteData.settings.budgetLimit;
+        hasChanged = true;
+      }
+      if (remoteData.settings.store && remoteData.settings.store !== state.store) {
+        state.store = remoteData.settings.store;
+        const storeSelect = document.getElementById('storeSelect');
+        if (storeSelect) storeSelect.value = state.store;
+        hasChanged = true;
+      }
+      if (typeof remoteData.settings.soundEnabled === 'boolean') {
+        state.soundEnabled = remoteData.settings.soundEnabled;
+      }
+    }
+
+    if (hasChanged) {
+      // Save locally without re-triggering cloud sync loop
+      saveStateToStorage(false);
+
+      // Re-render views
+      if (state.activeTab === 'tabBelanja') {
+        renderCartItems();
+        updateSafetyCapUI();
+      } else if (state.activeTab === 'tabRiwayat') {
+        renderHistoryTab();
+      } else if (state.activeTab === 'tabAnggaran') {
+        renderAnggaranTab();
+      }
+    }
+  } finally {
+    isApplyingRemoteSync = false;
+  }
+}
+
+function updateFirebaseSyncStatusUI(status) {
+  const syncPill = document.getElementById('cloudSyncIndicator');
+  const syncLabel = document.getElementById('cloudSyncUserLabel');
+  const displayUserId = document.getElementById('displayUserId');
+  const statusIndicator = document.getElementById('firebaseStatusIndicator');
+  const statusText = document.getElementById('firebaseStatusText');
+
+  const userId = status.userId || (window.FirebaseSync ? window.FirebaseSync.getUserId() : 'user_local');
+  const shortId = userId.length > 10 ? `${userId.substring(0, 10)}...` : userId;
+
+  if (displayUserId) displayUserId.textContent = userId;
+
+  if (status.connected) {
+    if (syncPill) {
+      syncPill.className = 'status-pill sync-pill';
+      syncPill.title = `Firebase Realtime Terhubung • Akun: ${userId}`;
+    }
+    if (syncLabel) syncLabel.textContent = shortId;
+    if (statusIndicator) {
+      statusIndicator.className = 'sync-status-indicator';
+    }
+    if (statusText) statusText.textContent = '🟢 Terhubung (Realtime)';
+  } else if (status.error) {
+    if (syncPill) {
+      syncPill.className = 'status-pill sync-pill error';
+      syncPill.title = `Koneksi Firebase: ${status.error}`;
+    }
+    if (syncLabel) syncLabel.textContent = 'Offline';
+    if (statusIndicator) {
+      statusIndicator.className = 'sync-status-indicator offline';
+    }
+    if (statusText) statusText.textContent = '🔴 Mode Lokal (Offline)';
+  } else {
+    if (syncPill) {
+      syncPill.className = 'status-pill sync-pill connecting';
+      syncPill.title = `Menghubungkan ke Firebase... (Akun: ${userId})`;
+    }
+    if (syncLabel) syncLabel.textContent = shortId;
+    if (statusIndicator) {
+      statusIndicator.className = 'sync-status-indicator connecting';
+    }
+    if (statusText) statusText.textContent = '🟡 Menghubungkan...';
+  }
+}
+
+function setupFirebaseIntegration() {
+  if (!window.FirebaseSync) return;
+
+  window.FirebaseSync.init({
+    onStatusChanged: (status) => {
+      updateFirebaseSyncStatusUI(status);
+    },
+    onDataUpdated: (remoteData) => {
+      applyRemoteFirebaseData(remoteData);
+    }
+  });
+
+  // Check if first-time user and upload initial state if needed
+  setTimeout(async () => {
+    if (window.FirebaseSync && window.FirebaseSync.isAvailable()) {
+      window.FirebaseSync.saveFullState(state);
+    }
+  }, 1200);
+
+  // Setup Account Card button events
+  const copyBtn = document.getElementById('copyUserIdBtn');
+  if (copyBtn) {
+    copyBtn.addEventListener('click', () => {
+      const uid = window.FirebaseSync.getUserId();
+      navigator.clipboard.writeText(uid).then(() => {
+        showToast(`ID Akun "${uid}" disalin ke clipboard!`, 'success');
+        playSound('tick');
+      }).catch(() => {
+        showToast('Gagal menyalin ID.', 'error');
+      });
+    });
+  }
+
+  const switchBtn = document.getElementById('switchUserIdBtn');
+  if (switchBtn) {
+    switchBtn.addEventListener('click', () => {
+      const cur = window.FirebaseSync.getUserId();
+      const input = prompt('Masukkan ID Akun perangkat yang ingin Anda hubungkan (misal: user_abc123):', cur);
+      if (input && input.trim() && input.trim() !== cur) {
+        window.FirebaseSync.setUserId(input.trim());
+        updateFirebaseSyncStatusUI({ connected: true, userId: input.trim() });
+        showToast(`Beralih ke ID Akun: ${input.trim()}`, 'success');
+        playSound('success');
+      }
+    });
+  }
+
+  const newBtn = document.getElementById('newUserIdBtn');
+  if (newBtn) {
+    newBtn.addEventListener('click', () => {
+      if (confirm('Buat ID Akun baru untuk perangkat ini? Troli belanja akan dimulai terpisah dari ID sebelumnya.')) {
+        window.FirebaseSync.generateNewUser();
+        const newId = window.FirebaseSync.getUserId();
+        updateFirebaseSyncStatusUI({ connected: true, userId: newId });
+        showToast(`ID Akun baru dibuat: ${newId}`, 'success');
+        playSound('success');
+      }
+    });
+  }
+
+  // Clicking sync pill in header takes user to Tab Anggaran & focuses account card
+  const syncPill = document.getElementById('cloudSyncIndicator');
+  if (syncPill) {
+    syncPill.addEventListener('click', () => {
+      switchTab('tabAnggaran');
+      document.querySelector('.firebase-account-card')?.scrollIntoView({ behavior: 'smooth' });
+    });
   }
 }
 
@@ -721,6 +932,10 @@ function deleteCartItem(id) {
     playSound('click');
     triggerHaptic(30);
     saveStateToStorage();
+    if (window.FirebaseSync && window.FirebaseSync.isAvailable()) {
+      window.FirebaseSync.removeCartItem(id);
+      window.FirebaseSync.saveCart(state.cart);
+    }
     renderCartItems();
     updateSafetyCapUI();
     showToast(`"${item.name}" dihapus dari troli`, 'info');
@@ -1287,6 +1502,12 @@ function renderAnggaranTab() {
 
   // Benchmark Catalog List
   renderBenchmarkList();
+
+  // Device Account & Cloud Sync Info
+  const displayUserId = document.getElementById('displayUserId');
+  if (displayUserId && window.FirebaseSync) {
+    displayUserId.textContent = window.FirebaseSync.getUserId();
+  }
 }
 
 function renderCategoryBreakdown() {
@@ -1758,6 +1979,15 @@ document.addEventListener('DOMContentLoaded', () => {
   // Initial renders
   renderCartItems();
   updateSafetyCapUI();
+
+  // Initialize Firebase Realtime Sync Engine
+  if (window.FirebaseSync) {
+    setupFirebaseIntegration();
+  } else {
+    window.addEventListener('firebase-ready', () => {
+      setupFirebaseIntegration();
+    });
+  }
 
   // PWA Offline status detection
   const offlineIndicator = document.getElementById('offlineIndicator');
