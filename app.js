@@ -697,6 +697,10 @@ function setupFirebaseIntegration() {
   } else {
     const acc = window.FirebaseSync.getAccount();
     updateFirebaseSyncStatusUI({ connected: true, userId: acc.userId, displayName: acc.displayName });
+    // Ensure initial sync of state to Firestore so the user collection is created
+    if (window.FirebaseSync.saveFullState) {
+      window.FirebaseSync.saveFullState(state);
+    }
   }
 
   // Setup Account Card buttons
