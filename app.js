@@ -17,13 +17,13 @@ const STORAGE_KEYS = {
 };
 
 const CATEGORIES = {
-  VEGETABLE_FRUIT: { id: 'VEGETABLE_FRUIT', label: 'Sayur & Buah', icon: '🥬', color: '#4ADE80' },
-  PROTEIN: { id: 'PROTEIN', label: 'Daging & Telur', icon: '🥩', color: '#F87171' },
-  SPICE_PANTRY: { id: 'SPICE_PANTRY', label: 'Bumbu & Pokok', icon: '🧂', color: '#FBBF24' },
-  DAIRY: { id: 'DAIRY', label: 'Susu & Olahan', icon: '🥛', color: '#38BDF8' },
-  SNACK_DRINK: { id: 'SNACK_DRINK', label: 'Snack & Minuman', icon: '🍪', color: '#C084FC' },
-  HOUSEHOLD: { id: 'HOUSEHOLD', label: 'Rumah & Mandi', icon: '🧼', color: '#7DD3FC' },
-  OTHER: { id: 'OTHER', label: 'Lainnya', icon: '📦', color: '#CBD5E1' }
+  VEGETABLE_FRUIT: { id: 'VEGETABLE_FRUIT', label: 'Sayur & Buah', icon: 'ðŸ¥¬', color: '#4ADE80' },
+  PROTEIN: { id: 'PROTEIN', label: 'Daging & Telur', icon: 'ðŸ¥©', color: '#F87171' },
+  SPICE_PANTRY: { id: 'SPICE_PANTRY', label: 'Bumbu & Pokok', icon: 'ðŸ§‚', color: '#FBBF24' },
+  DAIRY: { id: 'DAIRY', label: 'Susu & Olahan', icon: 'ðŸ¥›', color: '#38BDF8' },
+  SNACK_DRINK: { id: 'SNACK_DRINK', label: 'Snack & Minuman', icon: 'ðŸª', color: '#C084FC' },
+  HOUSEHOLD: { id: 'HOUSEHOLD', label: 'Rumah & Mandi', icon: 'ðŸ§¼', color: '#7DD3FC' },
+  OTHER: { id: 'OTHER', label: 'Lainnya', icon: 'ðŸ“¦', color: '#CBD5E1' }
 };
 
 // Seed Realistic Benchmark Prices (Harga Patokan Resmi Bulan Lalu)
@@ -74,54 +74,8 @@ const DEFAULT_HISTORY = [
   }
 ];
 
-// Initial starter cart items for immediate trolley experience
-const STARTER_CART = [
-  {
-    id: 'item-1',
-    name: 'Beras Ramos Super 5kg',
-    category: 'SPICE_PANTRY',
-    unit: 'pcs',
-    qty: 1,
-    price: 75000,
-    discountMode: 'SINGLE',
-    disc1: 5,
-    disc2: 0,
-    discNominal: 0,
-    netUnitPrice: 71250,
-    subtotal: 71250,
-    savedAmount: 3750
-  },
-  {
-    id: 'item-2',
-    name: 'Telur Ayam Negeri',
-    category: 'PROTEIN',
-    unit: 'kg',
-    qty: 1,
-    price: 26500,
-    discountMode: 'NONE',
-    disc1: 0,
-    disc2: 0,
-    discNominal: 0,
-    netUnitPrice: 26500,
-    subtotal: 26500,
-    savedAmount: 0
-  },
-  {
-    id: 'item-3',
-    name: 'Minyak Goreng Sawit 2L',
-    category: 'SPICE_PANTRY',
-    unit: 'pouch',
-    qty: 1,
-    price: 36000,
-    discountMode: 'TIERED',
-    disc1: 10,
-    disc2: 5,
-    discNominal: 0,
-    netUnitPrice: 30780,
-    subtotal: 30780,
-    savedAmount: 5220
-  }
-];
+// Initial starter cart items (default empty so user starts fresh)
+const STARTER_CART = [];
 
 // ===================================================================
 // APPLICATION STATE
@@ -257,7 +211,7 @@ function calculateDiscount(basePrice, mode, d1, d2, dNominal) {
     netPrice = Math.max(0, price - discountPerUnit);
     effectivePercent = p1;
     summaryText = `Diskon ${p1}%`;
-    educationNote = `Diskon langsung ${p1}% • Hemat Rp ${formatRupiahSimple(discountPerUnit)}/unit`;
+    educationNote = `Diskon langsung ${p1}% â€¢ Hemat Rp ${formatRupiahSimple(discountPerUnit)}/unit`;
   } else if (mode === 'TIERED') {
     const p1 = Math.min(100, Math.max(0, parseFloat(d1) || 0));
     const p2 = Math.min(100, Math.max(0, parseFloat(d2) || 0));
@@ -315,8 +269,8 @@ function comparePriceWithBenchmark(productName, unit, currentNetPrice) {
     return {
       hasBenchmark: false,
       status: 'NEW',
-      label: '✨ Produk Baru',
-      symbol: '✨',
+      label: 'âœ¨ Produk Baru',
+      symbol: 'âœ¨',
       diffRp: 0,
       diffPercent: 0,
       message: 'Item ini baru! Akan otomatis dicatat sebagai patokan harga bulan depan.'
@@ -333,8 +287,8 @@ function comparePriceWithBenchmark(productName, unit, currentNetPrice) {
       hasBenchmark: true,
       lastPrice,
       status: 'HIGHER',
-      label: `↑ +Rp ${formatRupiahSimple(diffRp)} (+${diffPercent.toFixed(1)}%)`,
-      symbol: '↑',
+      label: `â†‘ +Rp ${formatRupiahSimple(diffRp)} (+${diffPercent.toFixed(1)}%)`,
+      symbol: 'â†‘',
       diffRp,
       diffPercent,
       message: `Lebih mahal Rp ${formatRupiahSimple(diffRp)} (+${diffPercent.toFixed(1)}%) dibanding bulan lalu (Rp ${formatRupiahSimple(lastPrice)})!`
@@ -346,11 +300,11 @@ function comparePriceWithBenchmark(productName, unit, currentNetPrice) {
       hasBenchmark: true,
       lastPrice,
       status: 'LOWER',
-      label: `↓ -Rp ${formatRupiahSimple(absDiff)} (-${absPct.toFixed(1)}%)`,
-      symbol: '↓',
+      label: `â†“ -Rp ${formatRupiahSimple(absDiff)} (-${absPct.toFixed(1)}%)`,
+      symbol: 'â†“',
       diffRp,
       diffPercent,
-      message: `Lebih murah! Berhemat Rp ${formatRupiahSimple(absDiff)} (-${absPct.toFixed(1)}%) dibanding bulan lalu (Rp ${formatRupiahSimple(lastPrice)})! 🎉`
+      message: `Lebih murah! Berhemat Rp ${formatRupiahSimple(absDiff)} (-${absPct.toFixed(1)}%) dibanding bulan lalu (Rp ${formatRupiahSimple(lastPrice)})! ðŸŽ‰`
     };
   } else {
     return {
@@ -405,7 +359,22 @@ function formatUnitLabel(unit) {
 function loadStateFromStorage() {
   try {
     const savedCart = localStorage.getItem(STORAGE_KEYS.CART);
-    state.cart = savedCart ? JSON.parse(savedCart) : [...STARTER_CART];
+    if (savedCart) {
+      const parsed = JSON.parse(savedCart);
+      // Clean up legacy demo starter items if user loaded previous version with starter items
+      const isLegacyStarter = Array.isArray(parsed) &&
+        parsed.length === 3 &&
+        parsed.some(i => i.id === 'item-1') &&
+        parsed.some(i => i.id === 'item-2') &&
+        parsed.some(i => i.id === 'item-3');
+
+      state.cart = isLegacyStarter ? [] : (Array.isArray(parsed) ? parsed : []);
+      if (isLegacyStarter) {
+        localStorage.setItem(STORAGE_KEYS.CART, JSON.stringify([]));
+      }
+    } else {
+      state.cart = [];
+    }
 
     const savedBenchmarks = localStorage.getItem(STORAGE_KEYS.BENCHMARKS);
     state.benchmarks = savedBenchmarks ? JSON.parse(savedBenchmarks) : [...DEFAULT_BENCHMARKS];
@@ -423,7 +392,7 @@ function loadStateFromStorage() {
     state.soundEnabled = savedSound !== null ? savedSound === 'true' : true;
   } catch (err) {
     console.error('Failed to load localStorage data:', err);
-    state.cart = [...STARTER_CART];
+    state.cart = [];
     state.benchmarks = [...DEFAULT_BENCHMARKS];
     state.history = [...DEFAULT_HISTORY];
   }
@@ -466,23 +435,21 @@ function applyRemoteFirebaseData(remoteData) {
   try {
     let hasChanged = false;
 
-    // 1. Sync Cart
-    if (remoteData.cart !== undefined) {
-      const remoteCart = Array.isArray(remoteData.cart) 
-        ? remoteData.cart 
-        : (remoteData.cart ? Object.values(remoteData.cart) : []);
-      
-      if (JSON.stringify(remoteCart) !== JSON.stringify(state.cart)) {
-        state.cart = remoteCart;
-        hasChanged = true;
-      }
+    // 1. Sync Cart (Firebase RTDB omits empty array keys, so undefined implies empty cart)
+    const remoteCart = remoteData.cart 
+      ? (Array.isArray(remoteData.cart) ? remoteData.cart : Object.values(remoteData.cart))
+      : [];
+    
+    if (JSON.stringify(remoteCart) !== JSON.stringify(state.cart)) {
+      state.cart = remoteCart;
+      hasChanged = true;
     }
 
     // 2. Sync Benchmarks
-    if (remoteData.benchmarks !== undefined) {
+    if (remoteData.benchmarks) {
       const remoteBenchmarks = Array.isArray(remoteData.benchmarks) 
         ? remoteData.benchmarks 
-        : (remoteData.benchmarks ? Object.values(remoteData.benchmarks) : []);
+        : Object.values(remoteData.benchmarks);
       
       if (remoteBenchmarks.length > 0 && JSON.stringify(remoteBenchmarks) !== JSON.stringify(state.benchmarks)) {
         state.benchmarks = remoteBenchmarks;
@@ -491,15 +458,13 @@ function applyRemoteFirebaseData(remoteData) {
     }
 
     // 3. Sync History
-    if (remoteData.history !== undefined) {
-      const remoteHistory = Array.isArray(remoteData.history) 
-        ? remoteData.history 
-        : (remoteData.history ? Object.values(remoteData.history) : []);
-      
-      if (JSON.stringify(remoteHistory) !== JSON.stringify(state.history)) {
-        state.history = remoteHistory;
-        hasChanged = true;
-      }
+    const remoteHistory = remoteData.history 
+      ? (Array.isArray(remoteData.history) ? remoteData.history : Object.values(remoteData.history))
+      : [];
+    
+    if (JSON.stringify(remoteHistory) !== JSON.stringify(state.history)) {
+      state.history = remoteHistory;
+      hasChanged = true;
     }
 
     // 4. Sync Settings
@@ -676,6 +641,12 @@ function setupOnboardingModal() {
 
     const displayName = (onboardingMode === 'existing' && !name) ? cleanUserId : (name || cleanUserId);
 
+    // If creating a brand new account, ensure cart starts completely empty
+    if (onboardingMode === 'new') {
+      state.cart = [];
+      saveStateToStorage(false);
+    }
+
     // 1. Immediately register in local storage & attach listener
     if (window.FirebaseSync) {
       window.FirebaseSync.registerUser({ userId: cleanUserId, displayName });
@@ -821,7 +792,7 @@ function updateSafetyCapUI() {
 
   // Status classification
   if (percentage < 75) {
-    // 🟢 AMAN
+    // ðŸŸ¢ AMAN
     safetyStatusBadge.className = 'safety-status-badge status-safe';
     safetyStatusText.textContent = 'AMAN';
     remainingCaptionEl.textContent = 'Sisa Dompet';
@@ -831,7 +802,7 @@ function updateSafetyCapUI() {
     safetyAlertBanner.style.display = 'none';
     hasAlertedCritcal = false;
   } else if (percentage < 95) {
-    // 🟡 WASPADA
+    // ðŸŸ¡ WASPADA
     safetyStatusBadge.className = 'safety-status-badge status-warning';
     safetyStatusText.textContent = 'WASPADA';
     remainingCaptionEl.textContent = 'Sisa Dompet';
@@ -842,7 +813,7 @@ function updateSafetyCapUI() {
     safetyAlertMessage.textContent = `Awas! Belanjaan telah mencapai ${percentage.toFixed(0)}% dari batas dompet.`;
     hasAlertedCritcal = false;
   } else {
-    // 🔴 KRITIS / OVER BUDGET
+    // ðŸ”´ KRITIS / OVER BUDGET
     safetyStatusBadge.className = 'safety-status-badge status-danger';
     meterFill.style.background = 'linear-gradient(90deg, #F43F5E 0%, #BE123C 100%)';
     safetyAlertBanner.style.display = 'flex';
@@ -852,13 +823,13 @@ function updateSafetyCapUI() {
       remainingCaptionEl.textContent = 'Sisa Kritis';
       remainingBudgetEl.className = 'number-val highlight-danger';
       remainingBudgetEl.textContent = formatRupiah(remainingBudget);
-      safetyAlertMessage.textContent = `⚠️ Sisa dompet kritis (${percentage.toFixed(0)}% terpakai)! Pertimbangkan barang non-esensial.`;
+      safetyAlertMessage.textContent = `âš ï¸ Sisa dompet kritis (${percentage.toFixed(0)}% terpakai)! Pertimbangkan barang non-esensial.`;
     } else {
       safetyStatusText.textContent = 'OVER LIMIT';
       remainingCaptionEl.textContent = 'Defisit / Kurang';
       remainingBudgetEl.className = 'number-val highlight-danger';
       remainingBudgetEl.textContent = `-${formatRupiah(Math.abs(remainingBudget))}`;
-      safetyAlertMessage.textContent = `🚨 OVER BUDGET! Keranjang melebihi batas Rp ${formatRupiahSimple(Math.abs(remainingBudget))}. Segera keluarkan barang!`;
+      safetyAlertMessage.textContent = `ðŸš¨ OVER BUDGET! Keranjang melebihi batas Rp ${formatRupiahSimple(Math.abs(remainingBudget))}. Segera keluarkan barang!`;
     }
 
     if (!hasAlertedCritcal && percentage >= 95) {
@@ -926,6 +897,7 @@ function renderCartItems() {
   if (state.cart.length === 0) {
     container.innerHTML = '';
     emptyView.style.display = 'flex';
+    if (window.lucide) window.lucide.createIcons();
     return;
   } else {
     emptyView.style.display = 'none';
@@ -1000,7 +972,7 @@ function renderCartItems() {
           </div>
 
           <div class="item-subtotal-group">
-            <span class="unit-price-caption">${item.qty} × ${formatRupiah(item.netUnitPrice)}</span>
+            <span class="unit-price-caption">${item.qty} Ã— ${formatRupiah(item.netUnitPrice)}</span>
             <div class="subtotal-amount">${formatRupiah(item.subtotal)}</div>
           </div>
         </div>
@@ -1233,7 +1205,7 @@ function recalcModalItemPreview() {
 
   // Realtime Subtotal readout
   const subtotal = Math.round(qty * discCalc.netPrice);
-  document.getElementById('modalSubtotalFormula').textContent = `${qty} × ${formatRupiah(discCalc.netPrice)}`;
+  document.getElementById('modalSubtotalFormula').textContent = `${qty} Ã— ${formatRupiah(discCalc.netPrice)}`;
   document.getElementById('modalSubtotalVal').textContent = formatRupiah(subtotal);
 
   return {
@@ -1559,7 +1531,7 @@ function openReceiptModal(tripId) {
   receiptPaper.innerHTML = `
     <div class="receipt-title-center">
       <h4>STRUK RESMI BELANJA BULANAN</h4>
-      <p>${escapeHtml(trip.store)} • SMART GROCERY</p>
+      <p>${escapeHtml(trip.store)} â€¢ SMART GROCERY</p>
       <p style="font-size: 10px; color: #64748B;">${trip.dateFormatted}</p>
     </div>
     <div class="receipt-items-table">
@@ -1580,7 +1552,7 @@ function openReceiptModal(tripId) {
     </div>
     <div class="receipt-dashed-line"></div>
     <p style="text-align: center; font-size: 10px; color: #64748B;">
-      Catatan Belanja Anak Rantau • Anti Boros
+      Catatan Belanja Anak Rantau â€¢ Anti Boros
     </p>
   `;
 
@@ -1592,16 +1564,16 @@ function copyReceiptText() {
   if (!activeViewingReceiptTrip) return;
   const trip = activeViewingReceiptTrip;
 
-  let text = `🛒 STRUK BELANJA - ${trip.store}\n`;
-  text += `📅 Tanggal: ${trip.dateFormatted}\n`;
+  let text = `ðŸ›’ STRUK BELANJA - ${trip.store}\n`;
+  text += `ðŸ“… Tanggal: ${trip.dateFormatted}\n`;
   text += `--------------------------------\n`;
   trip.items.forEach(it => {
-    text += `• ${it.name} (${it.qty} ${it.unit}): ${formatRupiah(it.subtotal)}\n`;
+    text += `â€¢ ${it.name} (${it.qty} ${it.unit}): ${formatRupiah(it.subtotal)}\n`;
   });
   text += `--------------------------------\n`;
-  text += `💰 Total Belanja: ${formatRupiah(trip.totalSpent)}\n`;
-  text += `✨ Total Hemat: ${formatRupiah(trip.totalSaved)}\n`;
-  text += `🎯 Limit Anggaran: ${formatRupiah(trip.budgetLimit)}\n`;
+  text += `ðŸ’° Total Belanja: ${formatRupiah(trip.totalSpent)}\n`;
+  text += `âœ¨ Total Hemat: ${formatRupiah(trip.totalSaved)}\n`;
+  text += `ðŸŽ¯ Limit Anggaran: ${formatRupiah(trip.budgetLimit)}\n`;
 
   navigator.clipboard.writeText(text).then(() => {
     showToast('Struk berhasil disalin ke clipboard!', 'success');
@@ -1706,7 +1678,7 @@ function renderBenchmarkList(query = '') {
     <div class="benchmark-item-row">
       <div>
         <div class="bench-name">${escapeHtml(b.name)}</div>
-        <div class="bench-spec">${CATEGORIES[b.category]?.label || 'Lainnya'} • per ${formatUnitLabel(b.unit)}</div>
+        <div class="bench-spec">${CATEGORIES[b.category]?.label || 'Lainnya'} â€¢ per ${formatUnitLabel(b.unit)}</div>
       </div>
       <div style="display: flex; align-items: center; gap: 8px;">
         <span class="bench-price">${formatRupiah(b.price)}</span>
@@ -2093,7 +2065,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('resetDataBtn')?.addEventListener('click', () => {
     if (confirm('Yakin ingin mereset data ke standar awal? Semua keranjang dan riwayat akan direset.')) {
       localStorage.clear();
-      state.cart = [...STARTER_CART];
+      state.cart = [];
       state.benchmarks = [...DEFAULT_BENCHMARKS];
       state.history = [...DEFAULT_HISTORY];
       state.budgetLimit = 500000;

@@ -1,26 +1,21 @@
 /**
  * SMART GROCERY & BUDGET SAFETY TRACKER
- * Firebase Realtime Database Synchronization Engine
- * Handles per-device user registration, account isolation, and realtime sync.
+ * Firebase Cloud Firestore Synchronization Engine
+ * Handles per-device user registration, account isolation, and realtime sync via onSnapshot.
  */
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { 
-  getDatabase, 
-  ref, 
-  set, 
-  get, 
-  onValue, 
-  remove, 
-  update 
-} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+  getFirestore, 
+  doc, 
+  setDoc, 
+  getDoc, 
+  onSnapshot 
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 // ===================================================================
-// FIREBASE CONFIGURATION
+// FIREBASE CONFIGURATION (Cloud Firestore)
 // ===================================================================
-
-const DEFAULT_DB_URL = "https://grocery-tracker-4ac7c-default-rtdb.firebaseio.com";
-const SAVED_DB_URL_KEY = "smart_grocery_rtdb_url_v1";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCjY8oicimEjKRIV59ak9QKOhYVV6O1dLo",
@@ -28,22 +23,21 @@ const firebaseConfig = {
   projectId: "grocery-tracker-4ac7c",
   storageBucket: "grocery-tracker-4ac7c.firebasestorage.app",
   messagingSenderId: "656633759813",
-  appId: "1:656633759813:web:578dc000b1fcd77d393b2c",
-  databaseURL: localStorage.getItem(SAVED_DB_URL_KEY) || DEFAULT_DB_URL
+  appId: "1:656633759813:web:578dc000b1fcd77d393b2c"
 };
 
-// Initialize Firebase App
+// Initialize Firebase App & Firestore
 let app = null;
 let db = null;
 let isFirebaseInitialized = false;
 
 try {
   app = initializeApp(firebaseConfig);
-  db = getDatabase(app);
+  db = getFirestore(app);
   isFirebaseInitialized = true;
-  console.log("Firebase Realtime Database initialized with URL:", firebaseConfig.databaseURL);
+  console.log("Firebase Cloud Firestore initialized successfully for:", firebaseConfig.projectId);
 } catch (err) {
-  console.error("Firebase initialization failed:", err);
+  console.error("Firebase Firestore initialization failed:", err);
 }
 
 // ===================================================================
@@ -84,7 +78,7 @@ let currentAccount = getStoredAccount();
 let currentUserId = currentAccount ? currentAccount.userId : null;
 
 // ===================================================================
-// REALTIME SYNC STATE & LISTENERS
+// REALTIME SYNC STATE & LISTENERS (onSnapshot)
 // ===================================================================
 
 let isOnlineWithFirebase = false;
@@ -94,7 +88,7 @@ let onStatusChangeCallback = null;
 let isApplyingRemoteUpdate = false;
 
 /**
- * Public Firebase Sync API
+ * Public Firebase Sync API (Cloud Firestore)
  */
 const FirebaseSync = {
   isAvailable() {
@@ -115,17 +109,6 @@ const FirebaseSync = {
 
   getDisplayName() {
     return currentAccount ? (currentAccount.displayName || currentAccount.userId) : "Tamu";
-  },
-
-  getDatabaseUrl() {
-    return firebaseConfig.databaseURL;
-  },
-
-  setDatabaseUrl(newUrl) {
-    if (!newUrl || !newUrl.trim()) return false;
-    localStorage.setItem(SAVED_DB_URL_KEY, newUrl.trim());
-    window.location.reload();
-    return true;
   },
 
   generateSuggestedUserId(name) {
@@ -154,18 +137,21 @@ const FirebaseSync = {
       console.warn("Local storage write error:", e);
     }
 
-    // Attach listeners to new user node
+    // Attach listeners to new user document
     FirebaseSync.detachListeners();
     FirebaseSync.attachListeners();
 
-    // Save profile to Firebase Realtime Database asynchronously in background
+    // Save profile to Cloud Firestore
     if (FirebaseSync.isAvailable()) {
-      update(ref(db, `users/${currentUserId}/profile`), {
-        userId: cleanUserId,
-        displayName: cleanDisplayName,
-        lastActive: new Date().toISOString()
-      }).catch(err => {
-        console.warn("Background Firebase profile save warning:", err);
+      const userDocRef = doc(db, "users", cleanUserId);
+      setDoc(userDocRef, {
+        profile: {
+          userId: cleanUserId,
+          displayName: cleanDisplayName,
+          lastActive: new Date().toISOString()
+        }
+      }, { merge: true }).catch(err => {
+        console.warn("Background Firestore profile save warning:", err);
       });
     }
 
@@ -181,7 +167,7 @@ const FirebaseSync = {
   },
 
   /**
-   * Logout / Switch Account: resets local registered account
+   * Logout / Switch Account
    */
   logoutOrSwitch() {
     localStorage.removeItem(USER_ACCOUNT_STORAGE_KEY);
@@ -199,7 +185,7 @@ const FirebaseSync = {
   },
 
   /**
-   * Initialize sync engine
+   * Initialize Firestore sync engine
    */
   init({ onDataUpdated, onStatusChanged }) {
     onDataCallback = onDataUpdated;
@@ -210,26 +196,13 @@ const FirebaseSync = {
         onStatusChangeCallback({
           connected: false,
           userId: currentUserId,
-          error: "Firebase gagal terhubung"
+          error: "Cloud Firestore gagal diinisialisasi"
         });
       }
       return;
     }
 
-    // Monitor Firebase connection status
-    const connectedRef = ref(db, ".info/connected");
-    onValue(connectedRef, (snap) => {
-      isOnlineWithFirebase = snap.val() === true;
-      if (onStatusChangeCallback) {
-        onStatusChangeCallback({
-          connected: isOnlineWithFirebase,
-          userId: currentUserId,
-          displayName: currentAccount?.displayName || null
-        });
-      }
-    });
-
-    // If user is already registered, attach listeners
+    // If user is already registered, attach listeners immediately
     if (FirebaseSync.isRegistered()) {
       FirebaseSync.attachListeners();
     }
@@ -246,12 +219,21 @@ const FirebaseSync = {
     if (!FirebaseSync.isAvailable() || !currentUserId) return;
 
     FirebaseSync.detachListeners();
-    const userRef = ref(db, `users/${currentUserId}`);
+    const userDocRef = doc(db, "users", currentUserId);
 
-    // Listen to entire user branch
-    const unsubscribe = onValue(userRef, (snapshot) => {
-      const data = snapshot.val();
-      if (data && onDataCallback) {
+    // Listen to user document in real-time
+    const unsubscribe = onSnapshot(userDocRef, (docSnap) => {
+      isOnlineWithFirebase = true;
+      if (onStatusChangeCallback) {
+        onStatusChangeCallback({
+          connected: true,
+          userId: currentUserId,
+          displayName: currentAccount?.displayName || currentUserId
+        });
+      }
+
+      if (docSnap.exists() && onDataCallback) {
+        const data = docSnap.data();
         isApplyingRemoteUpdate = true;
         try {
           onDataCallback(data);
@@ -260,7 +242,8 @@ const FirebaseSync = {
         }
       }
     }, (err) => {
-      console.warn("Realtime listener error:", err);
+      console.warn("Firestore Realtime listener error:", err);
+      isOnlineWithFirebase = false;
       if (onStatusChangeCallback) {
         onStatusChangeCallback({
           connected: false,
@@ -274,12 +257,12 @@ const FirebaseSync = {
   },
 
   /**
-   * Check if remote user node exists in Firebase
+   * Check if remote user node exists in Firestore
    */
   async checkUserExists(userId) {
     if (!FirebaseSync.isAvailable() || !userId) return false;
     try {
-      const snap = await get(ref(db, `users/${userId}`));
+      const snap = await getDoc(doc(db, "users", userId));
       return snap.exists();
     } catch (e) {
       return false;
@@ -287,11 +270,12 @@ const FirebaseSync = {
   },
 
   /**
-   * Write full state to Firebase
+   * Write full state to Cloud Firestore
    */
   async saveFullState(fullState) {
     if (!FirebaseSync.isAvailable() || isApplyingRemoteUpdate || !currentUserId) return;
     try {
+      const userDocRef = doc(db, "users", currentUserId);
       const payload = {
         profile: {
           userId: currentUserId,
@@ -308,66 +292,73 @@ const FirebaseSync = {
         },
         lastUpdated: new Date().toISOString()
       };
-      await update(ref(db, `users/${currentUserId}`), payload);
+      await setDoc(userDocRef, payload, { merge: true });
     } catch (err) {
-      console.warn("Failed to save full state to Firebase:", err);
+      console.warn("Failed to save full state to Firestore:", err);
     }
   },
 
   /**
-   * CART OPERATIONS: Realtime save, add, remove
+   * CART OPERATIONS: Realtime save
    */
   async saveCart(cart) {
     if (!FirebaseSync.isAvailable() || isApplyingRemoteUpdate || !currentUserId) return;
     try {
-      await set(ref(db, `users/${currentUserId}/cart`), cart || []);
+      const userDocRef = doc(db, "users", currentUserId);
+      await setDoc(userDocRef, {
+        cart: cart || [],
+        lastUpdated: new Date().toISOString()
+      }, { merge: true });
     } catch (err) {
-      console.warn("Failed to sync cart to Firebase:", err);
-    }
-  },
-
-  async removeCartItem(itemId) {
-    if (!FirebaseSync.isAvailable() || isApplyingRemoteUpdate || !currentUserId || !itemId) return;
-    try {
-      await remove(ref(db, `users/${currentUserId}/cartItems/${itemId}`));
-    } catch (err) {
-      console.warn("Failed to remove cart item from Firebase:", err);
+      console.warn("Failed to sync cart to Firestore:", err);
     }
   },
 
   /**
-   * BENCHMARKS OPERATIONS
+   * BENCHMARKS OPERATIONS: Realtime save
    */
   async saveBenchmarks(benchmarks) {
     if (!FirebaseSync.isAvailable() || isApplyingRemoteUpdate || !currentUserId) return;
     try {
-      await set(ref(db, `users/${currentUserId}/benchmarks`), benchmarks || []);
+      const userDocRef = doc(db, "users", currentUserId);
+      await setDoc(userDocRef, {
+        benchmarks: benchmarks || [],
+        lastUpdated: new Date().toISOString()
+      }, { merge: true });
     } catch (err) {
-      console.warn("Failed to sync benchmarks to Firebase:", err);
+      console.warn("Failed to sync benchmarks to Firestore:", err);
     }
   },
 
   /**
-   * HISTORY OPERATIONS
+   * HISTORY OPERATIONS: Realtime save
    */
   async saveHistory(history) {
     if (!FirebaseSync.isAvailable() || isApplyingRemoteUpdate || !currentUserId) return;
     try {
-      await set(ref(db, `users/${currentUserId}/history`), history || []);
+      const userDocRef = doc(db, "users", currentUserId);
+      await setDoc(userDocRef, {
+        history: history || [],
+        lastUpdated: new Date().toISOString()
+      }, { merge: true });
     } catch (err) {
-      console.warn("Failed to sync history to Firebase:", err);
+      console.warn("Failed to sync history to Firestore:", err);
     }
   },
 
   /**
-   * SETTINGS OPERATIONS
+   * SETTINGS OPERATIONS: Realtime save
    */
   async saveSettings(settings) {
     if (!FirebaseSync.isAvailable() || isApplyingRemoteUpdate || !currentUserId) return;
     try {
-      await update(ref(db, `users/${currentUserId}/settings`), settings || {});
+      const userDocRef = doc(db, "users", currentUserId);
+      await setDoc(userDocRef, {
+        settings: settings || {},
+        lastUpdated: new Date().toISOString()
+      }, { merge: true });
     } catch (err) {
-      console.warn("Failed to sync settings to Firebase:", err);
+      console.warn("Failed to sync settings to Firestore:", err);
     }
   }
 };
