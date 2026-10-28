@@ -278,7 +278,7 @@ function comparePriceWithBenchmark(productName, unit, currentNetPrice) {
 
     if (knownInOtherStore) {
       return {
-        hasBenchmark: false;
+        hasBenchmark: false,
         status: 'NEW',
         label: 'Histori Toko Belum Ada',
         symbol: '\u2139',
