@@ -251,25 +251,52 @@ function comparePriceWithBenchmark(productName, unit, currentNetPrice) {
   }
 
   const cleanName = productName.trim().toLowerCase();
+  const currentStore = (state.store || '').toLowerCase();
   
-  // Smart keyword/alias & fuzzy matching in benchmark catalogue
+  // Perbandingan wajib mempertimbangkan toko yang sama dan identitas barang
   const match = state.benchmarks.find(b => {
     const bName = b.name.toLowerCase();
-    if (bName === cleanName || bName.includes(cleanName) || cleanName.includes(bName)) return true;
-    if (Array.isArray(b.aliases) && b.aliases.some(alias => cleanName.includes(alias) || alias.includes(cleanName))) return true;
-    const tokens = cleanName.split(/[\s,/-]+/).filter(t => t.length >= 3);
-    return tokens.some(t => bName.includes(t));
+    const nameMatch = (bName === cleanName || bName.includes(cleanName) || cleanName.includes(bName)) ||
+      (Array.isArray(b.aliases) && b.aliases.some(alias => cleanName.includes(alias) || alias.includes(cleanName))) ||
+      cleanName.split(/[\s,/-]+/).filter(t => t.length >= 3).some(t => bName.includes(t));
+
+    if (!nameMatch) return false;
+
+    // Cek kesesuaian toko (hanya membandingkan pada toko yang sama)
+    const bStore = (b.store || '').toLowerCase();
+    if (!bStore || bStore === currentStore || currentStore.includes(bStore) || bStore.includes(currentStore)) {
+      return true;
+    }
+    return false;
   });
 
   if (!match) {
+        label: 'Produk Baru',
+        symbol: '\u2728',
+      const bName = b.name.toLowerCase();
+      return (bName === cleanName || bName.includes(cleanName) || cleanName.includes(bName));
+    });
+
+    if (knownInOtherStore) {
+      return {
+        hasBenchmark: false,
+        status: 'NEW',
+        label: 'Histori Toko Belum Ada',
+        symbol: '\u2139',
+        diffRp: 0,
+        diffPercent: 0,
+        message: `Belum ada histori harga untuk "${productName}" di ${state.store}. Akan dicatat otomatis sebagai patokan bulan depan.`
+      };
+    }
+
     return {
       hasBenchmark: false,
       status: 'NEW',
-      label: 'âœ¨ Produk Baru',
-      symbol: 'âœ¨',
+        label: 'Produk Baru',
+        symbol: '\u2728',
       diffRp: 0,
       diffPercent: 0,
-      message: 'Item ini baru! Akan otomatis dicatat sebagai patokan harga bulan depan.'
+      message: `Item ini baru! Akan otomatis dicatat sebagai patokan harga bulan depan di ${state.store}.`
     };
   }
 
@@ -283,11 +310,11 @@ function comparePriceWithBenchmark(productName, unit, currentNetPrice) {
       hasBenchmark: true,
       lastPrice,
       status: 'HIGHER',
-      label: `â†‘ +Rp ${formatRupiahSimple(diffRp)} (+${diffPercent.toFixed(1)}%)`,
-      symbol: 'â†‘',
+      label: `\u2191 +Rp ${formatRupiahSimple(diffRp)} (+${diffPercent.toFixed(1)}%)`,
+      symbol: '\u2191',
       diffRp,
       diffPercent,
-      message: `Lebih mahal Rp ${formatRupiahSimple(diffRp)} (+${diffPercent.toFixed(1)}%) dibanding bulan lalu (Rp ${formatRupiahSimple(lastPrice)})!`
+      message: `Lebih mahal Rp ${formatRupiahSimple(diffRp)} (+${diffPercent.toFixed(1)}%) dibanding harga bulan lalu (Rp ${formatRupiahSimple(lastPrice)}) di ${match.store || state.store}!`
     };
   } else if (diffRp < 0) {
     const absDiff = Math.abs(diffRp);
@@ -296,18 +323,18 @@ function comparePriceWithBenchmark(productName, unit, currentNetPrice) {
       hasBenchmark: true,
       lastPrice,
       status: 'LOWER',
-      label: `â†“ -Rp ${formatRupiahSimple(absDiff)} (-${absPct.toFixed(1)}%)`,
-      symbol: 'â†“',
+      label: `\u2193 -Rp ${formatRupiahSimple(absDiff)} (-${absPct.toFixed(1)}%)`,
+      symbol: '\u2193',
       diffRp,
       diffPercent,
-      message: `Lebih murah! Berhemat Rp ${formatRupiahSimple(absDiff)} (-${absPct.toFixed(1)}%) dibanding bulan lalu (Rp ${formatRupiahSimple(lastPrice)})!`
+      message: `Lebih murah! Berhemat Rp ${formatRupiahSimple(absDiff)} (-${absPct.toFixed(1)}%) dibanding harga bulan lalu (Rp ${formatRupiahSimple(lastPrice)}) di ${match.store || state.store}!`
     };
   } else {
     return {
       hasBenchmark: true,
       lastPrice,
       status: 'EQUAL',
-      label: '= Harga Tetap Stabil',
+      label: '= Harga Stabil',
       symbol: '=',
       diffRp: 0,
       diffPercent: 0,
