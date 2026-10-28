@@ -19,13 +19,13 @@ const STORAGE_KEYS = {
 };
 
 const CATEGORIES = {
-  VEGETABLE_FRUIT: { id: 'VEGETABLE_FRUIT', label: 'Sayur & Buah', icon: '\uD83E\uDD6C', color: '#4ADE80' },
-  PROTEIN: { id: 'PROTEIN', label: 'Daging & Telur', icon: '\uD83E\uDD69', color: '#F87171' },
-  SPICE_PANTRY: { id: 'SPICE_PANTRY', label: 'Bumbu & Pokok', icon: '\uD83C\uDF5A', color: '#FBBF24' },
-  DAIRY: { id: 'DAIRY', label: 'Susu & Olahan', icon: '\uD83E\uDD5B', color: '#38BDF8' },
-  SNACK_DRINK: { id: 'SNACK_DRINK', label: 'Snack & Minuman', icon: '\uD83C\uDF7F', color: '#C084FC' },
-  HOUSEHOLD: { id: 'HOUSEHOLD', label: 'Rumah & Mandi', icon: '\uD83E\uDFC4', color: '#7DD3FC' },
-  OTHER: { id: 'OTHER', label: 'Kebutuhan Lain', icon: '\uD83D\uDCE6', color: '#CBD5E1' }
+  VEGETABLE_FRUIT: { id: 'VEGETABLE_FRUIT', label: 'Sayur & Buah', icon: 'apple', color: '#4ADE80' },
+  PROTEIN: { id: 'PROTEIN', label: 'Daging & Telur', icon: 'beef', color: '#F87171' },
+  SPICE_PANTRY: { id: 'SPICE_PANTRY', label: 'Bumbu & Pokok', icon: 'wheat', color: '#FBBF24' },
+  DAIRY: { id: 'DAIRY', label: 'Susu & Olahan', icon: 'milk', color: '#38BDF8' },
+  SNACK_DRINK: { id: 'SNACK_DRINK', label: 'Snack & Minuman', icon: 'cookie', color: '#C084FC' },
+  HOUSEHOLD: { id: 'HOUSEHOLD', label: 'Rumah & Mandi', icon: 'sparkles', color: '#7DD3FC' },
+  OTHER: { id: 'OTHER', label: 'Kebutuhan Lain', icon: 'package', color: '#CBD5E1' }
 };
 
 // Seed Realistic Benchmark Prices (Harga Patokan Resmi Bulan Lalu - 26 September 2026 di Lotte Mart Puri Indah)
@@ -963,7 +963,7 @@ function renderCartItems() {
         <div class="item-top-row">
           <div class="item-title-group">
             <span class="item-category-tag cat-tag-${item.category}">
-              ${cat.icon} ${cat.label}
+              <i data-lucide="${cat.icon}" class="icon-xs"></i> ${cat.label}
             </span>
             <h4 class="item-product-name">${escapeHtml(item.name)}</h4>
             <span class="item-unit-spec">Satuan: ${formatUnitLabel(item.unit)}</span>
@@ -1167,6 +1167,7 @@ function openAddItemModal() {
   // Trigger modal display
   recalcModalItemPreview();
   showModal('itemModal');
+  if (window.lucide) window.lucide.createIcons();
   playSound('click');
 
   setTimeout(() => {
@@ -1201,6 +1202,7 @@ function openEditItemModal(id) {
 
   recalcModalItemPreview();
   showModal('itemModal');
+  if (window.lucide) window.lucide.createIcons();
   playSound('click');
 }
 

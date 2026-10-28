@@ -2675,3 +2675,51 @@ input, button, select, textarea {
   color: #94A3B8 !important;
   border: 1px solid rgba(148, 163, 184, 0.3) !important;
 }
+
+/* Category Lucide Icon Visual Alignment */
+.cat-pill {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+}
+
+.cat-pill svg,
+.cat-pill i {
+  width: 14px !important;
+  height: 14px !important;
+  flex-shrink: 0 !important;
+  stroke: currentColor !important;
+}
+
+.cat-choice-btn {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+}
+
+.cat-choice-btn svg,
+.cat-choice-btn i {
+  width: 16px !important;
+  height: 16px !important;
+  flex-shrink: 0 !important;
+  stroke: currentColor !important;
+}
+
+.cat-choice-btn.active svg,
+.cat-choice-btn.active i {
+  stroke: var(--primary) !important;
+}
+
+.item-category-tag {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 5px !important;
+}
+
+.item-category-tag svg,
+.item-category-tag i {
+  width: 13px !important;
+  height: 13px !important;
+  flex-shrink: 0 !important;
+  stroke: currentColor !important;
+}
