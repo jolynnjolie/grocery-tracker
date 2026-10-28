@@ -19,13 +19,13 @@ const STORAGE_KEYS = {
 };
 
 const CATEGORIES = {
-  VEGETABLE_FRUIT: { id: 'VEGETABLE_FRUIT', label: 'Sayur & Buah', icon: 'Ã°Å¸Â¥Â¬', color: '#4ADE80' },
-  PROTEIN: { id: 'PROTEIN', label: 'Daging & Telur', icon: 'Ã°Å¸Â¥Â©', color: '#F87171' },
-  SPICE_PANTRY: { id: 'SPICE_PANTRY', label: 'Bumbu & Pokok', icon: 'Ã°Å¸Â§â€š', color: '#FBBF24' },
-  DAIRY: { id: 'DAIRY', label: 'Susu & Olahan', icon: 'Ã°Å¸Â¥â€º', color: '#38BDF8' },
-  SNACK_DRINK: { id: 'SNACK_DRINK', label: 'Snack & Minuman', icon: 'Ã°Å¸ÂÂª', color: '#C084FC' },
-  HOUSEHOLD: { id: 'HOUSEHOLD', label: 'Rumah & Mandi', icon: 'Ã°Å¸Â§Â¼', color: '#7DD3FC' },
-  OTHER: { id: 'OTHER', label: 'Lainnya', icon: 'Ã°Å¸â€œÂ¦', color: '#CBD5E1' }
+  VEGETABLE_FRUIT: { id: 'VEGETABLE_FRUIT', label: 'Sayur & Buah', icon: '\uD83E\uDD6C', color: '#4ADE80' },
+  PROTEIN: { id: 'PROTEIN', label: 'Daging & Telur', icon: '\uD83E\uDD69', color: '#F87171' },
+  SPICE_PANTRY: { id: 'SPICE_PANTRY', label: 'Bumbu & Pokok', icon: '\uD83C\uDF5A', color: '#FBBF24' },
+  DAIRY: { id: 'DAIRY', label: 'Susu & Olahan', icon: '\uD83E\uDD5B', color: '#38BDF8' },
+  SNACK_DRINK: { id: 'SNACK_DRINK', label: 'Snack & Minuman', icon: '\uD83C\uDF7F', color: '#C084FC' },
+  HOUSEHOLD: { id: 'HOUSEHOLD', label: 'Rumah & Mandi', icon: '\uD83E\uDFC4', color: '#7DD3FC' },
+  OTHER: { id: 'OTHER', label: 'Kebutuhan Lain', icon: '\uD83D\uDCE6', color: '#CBD5E1' }
 };
 
 // Seed Realistic Benchmark Prices (Harga Patokan Resmi Bulan Lalu - 26 September 2026 di Lotte Mart Puri Indah)
@@ -204,7 +204,7 @@ function calculateDiscount(basePrice, mode, d1, d2, dNominal) {
     netPrice = Math.max(0, price - discountPerUnit);
     effectivePercent = p1;
     summaryText = `Diskon ${p1}%`;
-    educationNote = `Diskon langsung ${p1}% Ã¢â‚¬Â¢ Hemat Rp ${formatRupiahSimple(discountPerUnit)}/unit`;
+    educationNote = `Diskon langsung ${p1}% \u2022 Hemat Rp ${formatRupiahSimple(discountPerUnit)}/unit`;
   } else if (mode === 'TIERED') {
     const p1 = Math.min(100, Math.max(0, parseFloat(d1) || 0));
     const p2 = Math.min(100, Math.max(0, parseFloat(d2) || 0));
@@ -271,15 +271,14 @@ function comparePriceWithBenchmark(productName, unit, currentNetPrice) {
   });
 
   if (!match) {
-        label: 'Produk Baru',
-        symbol: '\u2728',
+    const knownInOtherStore = state.benchmarks.some(b => {
       const bName = b.name.toLowerCase();
       return (bName === cleanName || bName.includes(cleanName) || cleanName.includes(bName));
     });
 
     if (knownInOtherStore) {
       return {
-        hasBenchmark: false,
+        hasBenchmark: false;
         status: 'NEW',
         label: 'Histori Toko Belum Ada',
         symbol: '\u2139',
@@ -292,8 +291,8 @@ function comparePriceWithBenchmark(productName, unit, currentNetPrice) {
     return {
       hasBenchmark: false,
       status: 'NEW',
-        label: 'Produk Baru',
-        symbol: '\u2728',
+      label: 'Produk Baru',
+      symbol: '\u2728',
       diffRp: 0,
       diffPercent: 0,
       message: `Item ini baru! Akan otomatis dicatat sebagai patokan harga bulan depan di ${state.store}.`
@@ -310,7 +309,7 @@ function comparePriceWithBenchmark(productName, unit, currentNetPrice) {
       hasBenchmark: true,
       lastPrice,
       status: 'HIGHER',
-      label: `\u2191 +Rp ${formatRupiahSimple(diffRp)} (+${diffPercent.toFixed(1)}%)`,
+      label: `+Rp ${formatRupiahSimple(diffRp)} (+${diffPercent.toFixed(1)}%)`,
       symbol: '\u2191',
       diffRp,
       diffPercent,
@@ -323,7 +322,7 @@ function comparePriceWithBenchmark(productName, unit, currentNetPrice) {
       hasBenchmark: true,
       lastPrice,
       status: 'LOWER',
-      label: `\u2193 -Rp ${formatRupiahSimple(absDiff)} (-${absPct.toFixed(1)}%)`,
+      label: `-Rp ${formatRupiahSimple(absDiff)} (-${absPct.toFixed(1)}%)`,
       symbol: '\u2193',
       diffRp,
       diffPercent,
@@ -334,7 +333,7 @@ function comparePriceWithBenchmark(productName, unit, currentNetPrice) {
       hasBenchmark: true,
       lastPrice,
       status: 'EQUAL',
-      label: '= Harga Stabil',
+      label: 'Harga Stabil',
       symbol: '=',
       diffRp: 0,
       diffPercent: 0,
@@ -556,13 +555,13 @@ function updateFirebaseSyncStatusUI(status) {
   if (status.connected && userId) {
     if (syncPill) {
       syncPill.className = 'status-pill sync-pill';
-      syncPill.title = `Firebase Realtime Terhubung â€¢ ${displayName} (${userId})`;
+      syncPill.title = `Firebase Realtime Terhubung \u2022 ${displayName} (${userId})`;
     }
     if (syncLabel) syncLabel.textContent = labelText;
     if (statusIndicator) {
       statusIndicator.className = 'sync-status-indicator';
     }
-    if (statusText) statusText.textContent = 'ðŸŸ¢ Terhubung (Realtime)';
+    if (statusText) statusText.textContent = '\uD83D\uDFE2 Terhubung (Realtime)';
   } else if (!userId) {
     if (syncPill) {
       syncPill.className = 'status-pill sync-pill connecting';
@@ -572,7 +571,7 @@ function updateFirebaseSyncStatusUI(status) {
     if (statusIndicator) {
       statusIndicator.className = 'sync-status-indicator connecting';
     }
-    if (statusText) statusText.textContent = 'ðŸŸ¡ Belum Terdaftar';
+    if (statusText) statusText.textContent = '\uD83D\uDFE1 Belum Terdaftar';
   } else if (status.error) {
     if (syncPill) {
       syncPill.className = 'status-pill sync-pill error';
@@ -582,7 +581,7 @@ function updateFirebaseSyncStatusUI(status) {
     if (statusIndicator) {
       statusIndicator.className = 'sync-status-indicator offline';
     }
-    if (statusText) statusText.textContent = 'ðŸ”´ Mode Lokal (Offline)';
+    if (statusText) statusText.textContent = '\u26AA Mode Lokal (Offline)';
   } else {
     if (syncPill) {
       syncPill.className = 'status-pill sync-pill connecting';
@@ -592,7 +591,7 @@ function updateFirebaseSyncStatusUI(status) {
     if (statusIndicator) {
       statusIndicator.className = 'sync-status-indicator connecting';
     }
-    if (statusText) statusText.textContent = 'ðŸŸ¡ Menghubungkan...';
+    if (statusText) statusText.textContent = '\uD83D\uDD35 Menghubungkan...';
   }
 }
 
@@ -1300,7 +1299,7 @@ function recalcModalItemPreview() {
 
   // Realtime Subtotal readout
   const subtotal = Math.round(qty * discCalc.netPrice);
-  document.getElementById('modalSubtotalFormula').textContent = `${qty} Ãƒâ€” ${formatRupiah(discCalc.netPrice)}`;
+  document.getElementById('modalSubtotalFormula').textContent = `${qty} \u00D7 ${formatRupiah(discCalc.netPrice)}`;
   document.getElementById('modalSubtotalVal').textContent = formatRupiah(subtotal);
 
   return {
@@ -1633,7 +1632,7 @@ function openReceiptModal(tripId) {
   receiptPaper.innerHTML = `
     <div class="receipt-title-center">
       <h4>STRUK RESMI BELANJA BULANAN</h4>
-      <p>${escapeHtml(trip.store)} Ã¢â‚¬Â¢ SMART GROCERY</p>
+      <p>${escapeHtml(trip.store)} \u2022 SMART GROCERY</p>
       <p style="font-size: 10px; color: #64748B;">${trip.dateFormatted}</p>
     </div>
     <div class="receipt-items-table">
@@ -1654,7 +1653,7 @@ function openReceiptModal(tripId) {
     </div>
     <div class="receipt-dashed-line"></div>
     <p style="text-align: center; font-size: 10px; color: #64748B;">
-      Catatan Belanja Anak Rantau Ã¢â‚¬Â¢ Anti Boros
+      Catatan Belanja Anak Rantau \u2022 Anti Boros
     </p>
   `;
 
@@ -1666,16 +1665,16 @@ function copyReceiptText() {
   if (!activeViewingReceiptTrip) return;
   const trip = activeViewingReceiptTrip;
 
-  let text = `Ã°Å¸â€ºâ€™ STRUK BELANJA - ${trip.store}\n`;
-  text += `Ã°Å¸â€œâ€¦ Tanggal: ${trip.dateFormatted}\n`;
+  let text = `[STRUK] STRUK BELANJA - ${trip.store}\n`;
+  text += `\u2022 Tanggal: ${trip.dateFormatted}\n`;
   text += `--------------------------------\n`;
   trip.items.forEach(it => {
-    text += `Ã¢â‚¬Â¢ ${it.name} (${it.qty} ${it.unit}): ${formatRupiah(it.subtotal)}\n`;
+    text += `  - ${it.name} (${it.qty} ${it.unit}): ${formatRupiah(it.subtotal)}\n`;
   });
   text += `--------------------------------\n`;
-  text += `Ã°Å¸â€™Â° Total Belanja: ${formatRupiah(trip.totalSpent)}\n`;
-  text += `Ã¢Å“Â¨ Total Hemat: ${formatRupiah(trip.totalSaved)}\n`;
-  text += `Ã°Å¸Å½Â¯ Limit Anggaran: ${formatRupiah(trip.budgetLimit)}\n`;
+  text += `\u2022 Total Belanja: ${formatRupiah(trip.totalSpent)}\n`;
+  text += `\u2022 Total Hemat: ${formatRupiah(trip.totalSaved)}\n`;
+  text += `\u2022 Limit Anggaran: ${formatRupiah(trip.budgetLimit)}\n`;
 
   navigator.clipboard.writeText(text).then(() => {
     showToast('Struk berhasil disalin ke clipboard!', 'success');
@@ -1780,7 +1779,7 @@ function renderBenchmarkList(query = '') {
     <div class="benchmark-item-row">
       <div>
         <div class="bench-name">${escapeHtml(b.name)}</div>
-        <div class="bench-spec">${CATEGORIES[b.category]?.label || 'Lainnya'} Ã¢â‚¬Â¢ per ${formatUnitLabel(b.unit)}</div>
+        <div class="bench-spec">${CATEGORIES[b.category]?.label || 'Lainnya'} \u2022 per ${formatUnitLabel(b.unit)}</div>
       </div>
       <div style="display: flex; align-items: center; gap: 8px;">
         <span class="bench-price">${formatRupiah(b.price)}</span>
