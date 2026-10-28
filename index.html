@@ -103,7 +103,7 @@
             </div>
             <div class="meter-ticks">
               <span>0%</span>
-              <span class="tick-warning">75% Waspada</span>
+              <span class="tick-warning">90% Waspada</span>
               <span class="tick-danger">100% Limit</span>
             </div>
           </div>
@@ -124,23 +124,37 @@
         =============================================== -->
         <section class="tab-page active" id="tabBelanja">
           
-          <!-- Quick Trip Header & Store Selector -->
+          <!-- Quick Trip Header: Store Selector & Date Picker -->
           <div class="trip-meta-bar">
             <div class="store-badge-picker" id="storeBadgePicker">
               <i data-lucide="map-pin" class="icon-xs"></i>
               <select id="storeSelect" aria-label="Pilih Supermarket">
+                <option value="Lotte Mart Grocery - Puri Indah" selected>Lotte Mart Grocery - Puri Indah</option>
                 <option value="Superindo">Superindo</option>
                 <option value="Hypermart">Hypermart</option>
                 <option value="Indomaret Fresh">Indomaret Fresh</option>
-                <option value="Alfamidi">Alfamidi Super</option>
+                <option value="Alfamidi Super">Alfamidi Super</option>
                 <option value="Transmart">Transmart</option>
                 <option value="Pasar Tradisional">Pasar Tradisional</option>
-                <option value="Lainnya">Toko Lainnya</option>
+                <option value="Lainnya">Toko Lainnya (Ketik Sendiri)...</option>
               </select>
+            </div>
+            <div class="date-badge-picker" id="dateBadgePicker">
+              <i data-lucide="calendar" class="icon-xs"></i>
+              <input type="date" id="shoppingDateInput" aria-label="Tanggal Belanja" title="Pilih Tanggal Belanja">
             </div>
             <div class="savings-pill" id="totalSavingsPill" title="Estimasi Penghematan dari Diskon & Komparasi">
               <i data-lucide="sparkles" class="icon-xs"></i>
               <span>Hemat: <strong id="totalSavingsText">Rp 0</strong></span>
+            </div>
+          </div>
+
+          <!-- Custom Store Name Input Row (Active if 'Lainnya' selected) -->
+          <div class="custom-store-row" id="customStoreRow" style="display: none;">
+            <div class="custom-store-input-wrap">
+              <i data-lucide="store" class="icon-xs"></i>
+              <input type="text" id="customStoreInput" placeholder="Ketik nama toko belanja sendiri..." autocomplete="off">
+              <button type="button" class="btn btn-sm btn-primary" id="saveCustomStoreBtn">Simpan Toko</button>
             </div>
           </div>
 
@@ -173,6 +187,14 @@
             </button>
           </div>
 
+          <!-- Trolley Items List Header & Action -->
+          <div class="cart-header-actions-row" id="cartHeaderActionsRow" style="display: none;">
+            <span class="cart-items-count-badge" id="cartSectionCountBadge">0 Barang di Keranjang</span>
+            <button type="button" class="btn-clear-cart-text" id="clearAllCartBtn">
+              <i data-lucide="trash" class="icon-xs"></i> Kosongkan Keranjang
+            </button>
+          </div>
+
           <!-- Trolley Items List -->
           <div class="items-list-container" id="cartItemsList">
             <!-- Dynamically populated or Empty State -->
@@ -183,10 +205,10 @@
             <div class="empty-icon-circle">
               <i data-lucide="shopping-basket"></i>
             </div>
-            <h3>Keranjang Troli Masih Kosong</h3>
-            <p>Mulai tambahkan barang saat Anda mengambilnya dari rak supermarket. Harga akan otomatis dibandingkan dengan bulan lalu!</p>
+            <h3>Keranjang Belanja Masih Kosong</h3>
+            <p>Keranjang belanja masih kosong, silakan scan atau tambahkan kebutuhan pokok pertamamu. Harga akan otomatis dibandingkan dengan patokan toko bulan lalu!</p>
             <button class="btn btn-primary" id="emptyAddBtn">
-              <i data-lucide="plus-circle"></i> Tambah Barang Pertama
+              <i data-lucide="plus-circle"></i> Tambah Kebutuhan Pertama
             </button>
           </div>
 
@@ -302,12 +324,13 @@
             </div>
             <div class="budget-input-group">
               <span class="currency-prefix">Rp</span>
-              <input type="number" id="inputBudgetLimit" class="large-number-input" placeholder="500000" min="50000" step="10000">
+              <input type="number" id="inputBudgetLimit" class="large-number-input" placeholder="100000" min="10000" step="10000" inputmode="numeric">
             </div>
             <div class="quick-chips-row">
+              <button class="quick-chip" data-val="100000">100 Rb</button>
+              <button class="quick-chip" data-val="150000">150 Rb</button>
               <button class="quick-chip" data-val="300000">300 Rb</button>
               <button class="quick-chip" data-val="500000">500 Rb</button>
-              <button class="quick-chip" data-val="750000">750 Rb</button>
               <button class="quick-chip" data-val="1000000">1 Jt</button>
             </div>
             <button class="btn btn-secondary w-full" id="saveBudgetLimitBtn">
@@ -478,6 +501,8 @@
           <div class="form-group">
             <label for="inputUnit">Satuan Ukur</label>
             <select id="inputUnit">
+              <option value="karung/5kg">Karung (5kg)</option>
+              <option value="karung">Karung</option>
               <option value="kg">Kilogram (kg)</option>
               <option value="g">Gram (g)</option>
               <option value="liter">Liter (L)</option>
@@ -497,7 +522,7 @@
             <label for="inputQty">Kuantitas (Qty)</label>
             <div class="qty-stepper-box">
               <button type="button" class="stepper-btn" id="qtyMinusBtn" aria-label="Kurangi Qty">-</button>
-              <input type="number" id="inputQty" value="1" min="0.1" step="any" required>
+              <input type="number" id="inputQty" value="1" min="0.1" step="any" inputmode="decimal" required>
               <button type="button" class="stepper-btn" id="qtyPlusBtn" aria-label="Tambah Qty">+</button>
             </div>
             <div class="quick-qty-chips">
@@ -514,7 +539,7 @@
           <label for="inputUnitPrice">Harga Satuan Normal (Rp) <span class="required-star">*</span></label>
           <div class="currency-input-wrap">
             <span class="currency-label">Rp</span>
-            <input type="number" id="inputUnitPrice" placeholder="Contoh: 28000" min="0" step="100" required>
+            <input type="number" id="inputUnitPrice" placeholder="Contoh: 74000" min="0" step="100" inputmode="numeric" required>
           </div>
           <div class="quick-bump-row">
             <button type="button" class="bump-chip" data-bump="5000">+5 Rb</button>
@@ -559,26 +584,26 @@
             <div class="tiered-inputs-row" id="tieredDiscountRow" style="display: none;">
               <div class="tiered-field">
                 <label>Diskon Utama (%)</label>
-                <input type="number" id="inputDisc1" placeholder="50" min="0" max="100" step="any">
+                <input type="number" id="inputDisc1" placeholder="50" min="0" max="100" step="any" inputmode="decimal">
               </div>
               <span class="tiered-plus">+</span>
               <div class="tiered-field">
                 <label>Diskon Ekstra (%)</label>
-                <input type="number" id="inputDisc2" placeholder="20" min="0" max="100" step="any">
+                <input type="number" id="inputDisc2" placeholder="20" min="0" max="100" step="any" inputmode="decimal">
               </div>
             </div>
 
             <div class="single-input-row" id="singleDiscountRow" style="display: none;">
               <div class="form-group mb-0">
                 <label>Persentase Diskon (%)</label>
-                <input type="number" id="inputDiscSingle" placeholder="25" min="0" max="100" step="any">
+                <input type="number" id="inputDiscSingle" placeholder="25" min="0" max="100" step="any" inputmode="decimal">
               </div>
             </div>
 
             <div class="nominal-input-row" id="nominalDiscountRow" style="display: none;">
               <div class="form-group mb-0">
                 <label>Potongan Nominal Langsung (Rp)</label>
-                <input type="number" id="inputDiscNominal" placeholder="5000" min="0" step="100">
+                <input type="number" id="inputDiscNominal" placeholder="5000" min="0" step="100" inputmode="numeric">
               </div>
             </div>
 
@@ -669,26 +694,26 @@
           <label for="freePriceInput">Harga Bandrol di Rak (Rp)</label>
           <div class="currency-input-wrap">
             <span class="currency-label">Rp</span>
-            <input type="number" id="freePriceInput" placeholder="100000" value="100000" min="0" step="1000">
+            <input type="number" id="freePriceInput" placeholder="100000" value="100000" min="0" step="1000" inputmode="numeric">
           </div>
         </div>
 
         <div class="form-row-2">
           <div class="form-group">
             <label for="freeD1Input">Diskon 1 (%)</label>
-            <input type="number" id="freeD1Input" value="50" min="0" max="100">
+            <input type="number" id="freeD1Input" value="50" min="0" max="100" inputmode="decimal">
           </div>
           <div class="form-group">
             <label for="freeD2Input">Diskon 2 (%)</label>
-            <input type="number" id="freeD2Input" value="20" min="0" max="100">
+            <input type="number" id="freeD2Input" value="20" min="0" max="100" inputmode="decimal">
           </div>
         </div>
 
         <div class="discount-presets-row">
           <button type="button" class="preset-pill" onclick="setQuickCalcPreset(50, 20)">50% + 20%</button>
+          <button type="button" class="preset-pill" onclick="setQuickCalcPreset(25, 0)">25% Tunggal</button>
           <button type="button" class="preset-pill" onclick="setQuickCalcPreset(70, 20)">70% + 20%</button>
           <button type="button" class="preset-pill" onclick="setQuickCalcPreset(30, 10)">30% + 10%</button>
-          <button type="button" class="preset-pill" onclick="setQuickCalcPreset(20, 0)">Hanya 20%</button>
         </div>
 
         <!-- Visual Result Box -->
@@ -864,6 +889,26 @@
           </button>
         </div>
       </form>
+    </div>
+  </div>
+
+  <!-- ==============================================
+       MODAL 6: KONFIRMASI AKSI AMAN NON-BLOCKING (MODAL HAPUS)
+  =============================================== -->
+  <div class="modal-overlay" id="confirmActionModal" aria-hidden="true">
+    <div class="modal-sheet confirm-sheet" role="dialog" aria-labelledby="confirmDialogTitle">
+      <div class="modal-drag-handle"></div>
+      <div class="confirm-dialog-body text-center">
+        <div class="confirm-icon-badge" id="confirmDialogIconBadge">
+          <i data-lucide="alert-triangle" class="icon-danger"></i>
+        </div>
+        <h3 id="confirmDialogTitle" class="confirm-dialog-heading">Konfirmasi Tindakan</h3>
+        <p id="confirmDialogMessage" class="confirm-dialog-desc">Apakah Anda yakin ingin melanjutkan tindakan ini?</p>
+        <div class="modal-actions-grid mt-4">
+          <button type="button" class="btn btn-outline" id="confirmCancelBtn">Batal</button>
+          <button type="button" class="btn btn-danger" id="confirmExecuteBtn">Ya, Lanjutkan</button>
+        </div>
+      </div>
     </div>
   </div>
 

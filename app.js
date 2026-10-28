@@ -13,63 +13,54 @@ const STORAGE_KEYS = {
   HISTORY: 'smart_grocery_history_v1',
   BUDGET: 'smart_grocery_budget_v1',
   STORE: 'smart_grocery_store_v1',
+  CUSTOM_STORE: 'smart_grocery_custom_store_v1',
+  DATE: 'smart_grocery_date_v1',
   SOUND: 'smart_grocery_sound_v1'
 };
 
 const CATEGORIES = {
-  VEGETABLE_FRUIT: { id: 'VEGETABLE_FRUIT', label: 'Sayur & Buah', icon: 'ðŸ¥¬', color: '#4ADE80' },
-  PROTEIN: { id: 'PROTEIN', label: 'Daging & Telur', icon: 'ðŸ¥©', color: '#F87171' },
-  SPICE_PANTRY: { id: 'SPICE_PANTRY', label: 'Bumbu & Pokok', icon: 'ðŸ§‚', color: '#FBBF24' },
-  DAIRY: { id: 'DAIRY', label: 'Susu & Olahan', icon: 'ðŸ¥›', color: '#38BDF8' },
-  SNACK_DRINK: { id: 'SNACK_DRINK', label: 'Snack & Minuman', icon: 'ðŸª', color: '#C084FC' },
-  HOUSEHOLD: { id: 'HOUSEHOLD', label: 'Rumah & Mandi', icon: 'ðŸ§¼', color: '#7DD3FC' },
-  OTHER: { id: 'OTHER', label: 'Lainnya', icon: 'ðŸ“¦', color: '#CBD5E1' }
+  VEGETABLE_FRUIT: { id: 'VEGETABLE_FRUIT', label: 'Sayur & Buah', icon: 'Ã°Å¸Â¥Â¬', color: '#4ADE80' },
+  PROTEIN: { id: 'PROTEIN', label: 'Daging & Telur', icon: 'Ã°Å¸Â¥Â©', color: '#F87171' },
+  SPICE_PANTRY: { id: 'SPICE_PANTRY', label: 'Bumbu & Pokok', icon: 'Ã°Å¸Â§â€š', color: '#FBBF24' },
+  DAIRY: { id: 'DAIRY', label: 'Susu & Olahan', icon: 'Ã°Å¸Â¥â€º', color: '#38BDF8' },
+  SNACK_DRINK: { id: 'SNACK_DRINK', label: 'Snack & Minuman', icon: 'Ã°Å¸ÂÂª', color: '#C084FC' },
+  HOUSEHOLD: { id: 'HOUSEHOLD', label: 'Rumah & Mandi', icon: 'Ã°Å¸Â§Â¼', color: '#7DD3FC' },
+  OTHER: { id: 'OTHER', label: 'Lainnya', icon: 'Ã°Å¸â€œÂ¦', color: '#CBD5E1' }
 };
 
-// Seed Realistic Benchmark Prices (Harga Patokan Resmi Bulan Lalu)
+// Seed Realistic Benchmark Prices (Harga Patokan Resmi Bulan Lalu - 26 September 2026 di Lotte Mart Puri Indah)
 const DEFAULT_BENCHMARKS = [
-  { name: 'Beras Ramos Super 5kg', category: 'SPICE_PANTRY', unit: 'pcs', price: 74000, lastUpdated: '2026-09-07' },
-  { name: 'Telur Ayam Negeri', category: 'PROTEIN', unit: 'kg', price: 28000, lastUpdated: '2026-09-07' },
-  { name: 'Minyak Goreng Sawit 2L', category: 'SPICE_PANTRY', unit: 'pouch', price: 34500, lastUpdated: '2026-09-07' },
-  { name: 'Dada Ayam Fillet', category: 'PROTEIN', unit: 'kg', price: 47500, lastUpdated: '2026-09-07' },
-  { name: 'Indomie Goreng Spesial', category: 'SPICE_PANTRY', unit: 'bks', price: 3100, lastUpdated: '2026-09-07' },
-  { name: 'Susu UHT Full Cream 1L', category: 'DAIRY', unit: 'liter', price: 18500, lastUpdated: '2026-09-07' },
-  { name: 'Kecap Manis Refill 550ml', category: 'SPICE_PANTRY', unit: 'bks', price: 21500, lastUpdated: '2026-09-07' },
-  { name: 'Bawang Merah', category: 'SPICE_PANTRY', unit: 'g', price: 12000, lastUpdated: '2026-09-07' }, // per 250g
-  { name: 'Bawang Putih Kating', category: 'SPICE_PANTRY', unit: 'g', price: 11000, lastUpdated: '2026-09-07' },
-  { name: 'Sabun Mandi Cair Refill 450ml', category: 'HOUSEHOLD', unit: 'bks', price: 22000, lastUpdated: '2026-09-07' },
-  { name: 'Shampoo Anti Dandruff 160ml', category: 'HOUSEHOLD', unit: 'botol', price: 24000, lastUpdated: '2026-09-07' },
-  { name: 'Pasta Gigi Fresh 150g', category: 'HOUSEHOLD', unit: 'pcs', price: 15500, lastUpdated: '2026-09-07' },
-  { name: 'Deterjen Cair Konsentrat 750ml', category: 'HOUSEHOLD', unit: 'bks', price: 19500, lastUpdated: '2026-09-07' },
-  { name: 'Sayur Bayam Segar', category: 'VEGETABLE_FRUIT', unit: 'ikat', price: 3500, lastUpdated: '2026-09-07' },
-  { name: 'Wortel Segar', category: 'VEGETABLE_FRUIT', unit: 'kg', price: 16000, lastUpdated: '2026-09-07' },
-  { name: 'Tempe Papan', category: 'PROTEIN', unit: 'pcs', price: 6000, lastUpdated: '2026-09-07' },
-  { name: 'Tahu Sutra Box', category: 'PROTEIN', unit: 'box', price: 8000, lastUpdated: '2026-09-07' },
-  { name: 'Kopi Instan 10 Sachet', category: 'SNACK_DRINK', unit: 'pack', price: 14000, lastUpdated: '2026-09-07' },
-  { name: 'Biskuit Gandum', category: 'SNACK_DRINK', unit: 'pack', price: 10500, lastUpdated: '2026-09-07' },
-  { name: 'Roti Tawar Gandum Kupas', category: 'SNACK_DRINK', unit: 'bks', price: 16500, lastUpdated: '2026-09-07' }
+  { name: 'Beras 5kg', aliases: ['beras', 'beras rojolele', 'beras 5kg', 'beras ramos', 'beras ramos super 5kg', 'beras rojolele 5kg'], category: 'SPICE_PANTRY', unit: 'karung/5kg', price: 68000, lastUpdated: '2026-09-26', store: 'Lotte Mart Grocery - Puri Indah' },
+  { name: 'Telur Ayam 1kg', aliases: ['telur', 'telur ayam', 'telur 1kg', 'telur ayam negeri'], category: 'PROTEIN', unit: 'kg', price: 32000, lastUpdated: '2026-09-26', store: 'Lotte Mart Grocery - Puri Indah' },
+  { name: 'Garam 500g', aliases: ['garam', 'garam dapur', 'garam 500g'], category: 'SPICE_PANTRY', unit: 'bks', price: 5000, lastUpdated: '2026-09-26', store: 'Lotte Mart Grocery - Puri Indah' },
+  { name: 'Minyak Goreng Sawit 2L', aliases: ['minyak', 'minyak goreng', 'minyak goreng sawit 2l', 'minyak 2l', 'minyak goreng 2l'], category: 'SPICE_PANTRY', unit: 'pouch', price: 43000, lastUpdated: '2026-09-26', store: 'Lotte Mart Grocery - Puri Indah' },
+  { name: 'Sabun Cuci / Mandi', aliases: ['sabun', 'sabun cuci', 'sabun mandi', 'sabun cuci piring'], category: 'HOUSEHOLD', unit: 'pcs', price: 20000, lastUpdated: '2026-09-26', store: 'Lotte Mart Grocery - Puri Indah' },
+  { name: 'Wajan Penggorengan', aliases: ['wajan', 'wajan teflon', 'wajan penggorengan', 'wajan anti lengket'], category: 'HOUSEHOLD', unit: 'pcs', price: 100000, lastUpdated: '2026-09-26', store: 'Lotte Mart Grocery - Puri Indah' },
+  { name: 'Dada Ayam Fillet', aliases: ['dada ayam', 'ayam fillet'], category: 'PROTEIN', unit: 'kg', price: 47500, lastUpdated: '2026-09-26', store: 'Lotte Mart Grocery - Puri Indah' },
+  { name: 'Indomie Goreng Spesial', aliases: ['indomie', 'mie instan'], category: 'SPICE_PANTRY', unit: 'bks', price: 3100, lastUpdated: '2026-09-26', store: 'Lotte Mart Grocery - Puri Indah' },
+  { name: 'Susu UHT Full Cream 1L', aliases: ['susu', 'susu uht', 'susu full cream'], category: 'DAIRY', unit: 'liter', price: 18500, lastUpdated: '2026-09-26', store: 'Lotte Mart Grocery - Puri Indah' },
+  { name: 'Bawang Merah', aliases: ['bawang merah'], category: 'SPICE_PANTRY', unit: 'g', price: 12000, lastUpdated: '2026-09-26', store: 'Lotte Mart Grocery - Puri Indah' },
+  { name: 'Bawang Putih Kating', aliases: ['bawang putih'], category: 'SPICE_PANTRY', unit: 'g', price: 11000, lastUpdated: '2026-09-26', store: 'Lotte Mart Grocery - Puri Indah' },
+  { name: 'Shampoo Anti Dandruff 160ml', aliases: ['shampoo', 'sampo'], category: 'HOUSEHOLD', unit: 'botol', price: 24000, lastUpdated: '2026-09-26', store: 'Lotte Mart Grocery - Puri Indah' },
+  { name: 'Pasta Gigi Fresh 150g', aliases: ['pasta gigi', 'odol'], category: 'HOUSEHOLD', unit: 'pcs', price: 15500, lastUpdated: '2026-09-26', store: 'Lotte Mart Grocery - Puri Indah' }
 ];
 
 // Seed Previous Shopping Trips (History)
 const DEFAULT_HISTORY = [
   {
     id: 'trip-hist-2026-09',
-    date: '2026-09-07T14:30:00.000Z',
-    dateFormatted: '07 September 2026, 14:30',
-    store: 'Superindo',
-    budgetLimit: 500000,
-    totalSpent: 412200,
-    totalSaved: 38500,
-    itemsCount: 8,
+    date: '2026-09-26T14:30:00.000Z',
+    dateFormatted: '26 September 2026, 14:30',
+    store: 'Lotte Mart Grocery - Puri Indah',
+    budgetLimit: 350000,
+    totalSpent: 148000,
+    totalSaved: 28500,
+    itemsCount: 4,
     items: [
-      { name: 'Beras Ramos Super 5kg', category: 'SPICE_PANTRY', unit: 'pcs', qty: 1, price: 74000, netUnitPrice: 74000, subtotal: 74000 },
-      { name: 'Telur Ayam Negeri', category: 'PROTEIN', unit: 'kg', qty: 1.5, price: 28000, netUnitPrice: 28000, subtotal: 42000 },
-      { name: 'Minyak Goreng Sawit 2L', category: 'SPICE_PANTRY', unit: 'pouch', qty: 1, price: 34500, netUnitPrice: 34500, subtotal: 34500 },
-      { name: 'Dada Ayam Fillet', category: 'PROTEIN', unit: 'kg', qty: 1, price: 50000, netUnitPrice: 47500, subtotal: 47500, discountDesc: '5%' },
-      { name: 'Susu UHT Full Cream 1L', category: 'DAIRY', unit: 'liter', qty: 3, price: 20000, netUnitPrice: 18500, subtotal: 55500, discountDesc: 'Rp 1.500/pcs' },
-      { name: 'Indomie Goreng Spesial', category: 'SPICE_PANTRY', unit: 'bks', qty: 10, price: 3100, netUnitPrice: 3100, subtotal: 31000 },
-      { name: 'Sabun Mandi Cair Refill 450ml', category: 'HOUSEHOLD', unit: 'bks', qty: 2, price: 26000, netUnitPrice: 22000, subtotal: 44000, discountDesc: 'Beli 2 Diskon' },
-      { name: 'Kopi Instan 10 Sachet', category: 'SNACK_DRINK', unit: 'pack', qty: 2, price: 14000, netUnitPrice: 14000, subtotal: 28000 }
+      { name: 'Beras 5kg', category: 'SPICE_PANTRY', unit: 'karung/5kg', qty: 1, price: 68000, netUnitPrice: 68000, subtotal: 68000 },
+      { name: 'Telur Ayam Negeri', category: 'PROTEIN', unit: 'kg', qty: 1, price: 32000, netUnitPrice: 32000, subtotal: 32000 },
+      { name: 'Minyak Goreng Sawit 2L', category: 'SPICE_PANTRY', unit: 'pouch', qty: 1, price: 43000, netUnitPrice: 43000, subtotal: 43000 },
+      { name: 'Garam 500g', category: 'SPICE_PANTRY', unit: 'bks', qty: 1, price: 5000, netUnitPrice: 5000, subtotal: 5000 }
     ]
   }
 ];
@@ -85,8 +76,10 @@ const state = {
   cart: [],
   benchmarks: [],
   history: [],
-  budgetLimit: 500000,
-  store: 'Superindo',
+  budgetLimit: 100000,
+  store: 'Lotte Mart Grocery - Puri Indah',
+  customStore: '',
+  shoppingDate: new Date().toISOString().split('T')[0],
   activeCategoryFilter: 'ALL',
   soundEnabled: true,
   audioCtx: null,
@@ -211,7 +204,7 @@ function calculateDiscount(basePrice, mode, d1, d2, dNominal) {
     netPrice = Math.max(0, price - discountPerUnit);
     effectivePercent = p1;
     summaryText = `Diskon ${p1}%`;
-    educationNote = `Diskon langsung ${p1}% â€¢ Hemat Rp ${formatRupiahSimple(discountPerUnit)}/unit`;
+    educationNote = `Diskon langsung ${p1}% Ã¢â‚¬Â¢ Hemat Rp ${formatRupiahSimple(discountPerUnit)}/unit`;
   } else if (mode === 'TIERED') {
     const p1 = Math.min(100, Math.max(0, parseFloat(d1) || 0));
     const p2 = Math.min(100, Math.max(0, parseFloat(d2) || 0));
@@ -259,10 +252,13 @@ function comparePriceWithBenchmark(productName, unit, currentNetPrice) {
 
   const cleanName = productName.trim().toLowerCase();
   
-  // Fuzzy or exact matching in benchmark catalogue
+  // Smart keyword/alias & fuzzy matching in benchmark catalogue
   const match = state.benchmarks.find(b => {
     const bName = b.name.toLowerCase();
-    return bName === cleanName || bName.includes(cleanName) || cleanName.includes(bName);
+    if (bName === cleanName || bName.includes(cleanName) || cleanName.includes(bName)) return true;
+    if (Array.isArray(b.aliases) && b.aliases.some(alias => cleanName.includes(alias) || alias.includes(cleanName))) return true;
+    const tokens = cleanName.split(/[\s,/-]+/).filter(t => t.length >= 3);
+    return tokens.some(t => bName.includes(t));
   });
 
   if (!match) {
@@ -304,18 +300,18 @@ function comparePriceWithBenchmark(productName, unit, currentNetPrice) {
       symbol: 'â†“',
       diffRp,
       diffPercent,
-      message: `Lebih murah! Berhemat Rp ${formatRupiahSimple(absDiff)} (-${absPct.toFixed(1)}%) dibanding bulan lalu (Rp ${formatRupiahSimple(lastPrice)})! ðŸŽ‰`
+      message: `Lebih murah! Berhemat Rp ${formatRupiahSimple(absDiff)} (-${absPct.toFixed(1)}%) dibanding bulan lalu (Rp ${formatRupiahSimple(lastPrice)})!`
     };
   } else {
     return {
       hasBenchmark: true,
       lastPrice,
       status: 'EQUAL',
-      label: '= Harga Stabil',
+      label: '= Harga Tetap Stabil',
       symbol: '=',
       diffRp: 0,
       diffPercent: 0,
-      message: `Harga stabil, sama persis seperti bulan lalu (Rp ${formatRupiahSimple(lastPrice)}).`
+      message: `Harga stabil, sama persis seperti bulan lalu di ${match.store || state.store} (Rp ${formatRupiahSimple(lastPrice)}).`
     };
   }
 }
@@ -323,7 +319,6 @@ function comparePriceWithBenchmark(productName, unit, currentNetPrice) {
 // ===================================================================
 // FORMATTING HELPERS
 // ===================================================================
-
 function formatRupiah(num) {
   const n = Math.round(Number(num) || 0);
   return 'Rp ' + n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
@@ -361,7 +356,6 @@ function loadStateFromStorage() {
     const savedCart = localStorage.getItem(STORAGE_KEYS.CART);
     if (savedCart) {
       const parsed = JSON.parse(savedCart);
-      // Clean up legacy demo starter items if user loaded previous version with starter items
       const isLegacyStarter = Array.isArray(parsed) &&
         parsed.length === 3 &&
         parsed.some(i => i.id === 'item-1') &&
@@ -383,10 +377,16 @@ function loadStateFromStorage() {
     state.history = savedHistory ? JSON.parse(savedHistory) : [...DEFAULT_HISTORY];
 
     const savedBudget = localStorage.getItem(STORAGE_KEYS.BUDGET);
-    state.budgetLimit = savedBudget ? parseInt(savedBudget, 10) : 500000;
+    state.budgetLimit = savedBudget ? parseInt(savedBudget, 10) : 100000;
 
     const savedStore = localStorage.getItem(STORAGE_KEYS.STORE);
-    state.store = savedStore || 'Superindo';
+    state.store = savedStore || 'Lotte Mart Grocery - Puri Indah';
+
+    const savedCustomStore = localStorage.getItem(STORAGE_KEYS.CUSTOM_STORE);
+    state.customStore = savedCustomStore || '';
+
+    const savedDate = localStorage.getItem(STORAGE_KEYS.DATE);
+    state.shoppingDate = savedDate || new Date().toISOString().split('T')[0];
 
     const savedSound = localStorage.getItem(STORAGE_KEYS.SOUND);
     state.soundEnabled = savedSound !== null ? savedSound === 'true' : true;
@@ -405,6 +405,8 @@ function saveStateToStorage(syncFirebase = true) {
     localStorage.setItem(STORAGE_KEYS.HISTORY, JSON.stringify(state.history));
     localStorage.setItem(STORAGE_KEYS.BUDGET, state.budgetLimit.toString());
     localStorage.setItem(STORAGE_KEYS.STORE, state.store);
+    localStorage.setItem(STORAGE_KEYS.CUSTOM_STORE, state.customStore);
+    localStorage.setItem(STORAGE_KEYS.DATE, state.shoppingDate);
     localStorage.setItem(STORAGE_KEYS.SOUND, state.soundEnabled.toString());
 
     if (syncFirebase && window.FirebaseSync && window.FirebaseSync.isAvailable()) {
@@ -414,6 +416,8 @@ function saveStateToStorage(syncFirebase = true) {
       window.FirebaseSync.saveSettings({
         budgetLimit: state.budgetLimit,
         store: state.store,
+        customStore: state.customStore,
+        shoppingDate: state.shoppingDate,
         soundEnabled: state.soundEnabled
       });
     }
@@ -421,8 +425,6 @@ function saveStateToStorage(syncFirebase = true) {
     console.error('Failed to save to localStorage / Firebase:', err);
   }
 }
-
-// ===================================================================
 // FIREBASE REALTIME DATABASE SYNC INTEGRATION
 // ===================================================================
 
@@ -527,13 +529,13 @@ function updateFirebaseSyncStatusUI(status) {
   if (status.connected && userId) {
     if (syncPill) {
       syncPill.className = 'status-pill sync-pill';
-      syncPill.title = `Firebase Realtime Terhubung • ${displayName} (${userId})`;
+      syncPill.title = `Firebase Realtime Terhubung â€¢ ${displayName} (${userId})`;
     }
     if (syncLabel) syncLabel.textContent = labelText;
     if (statusIndicator) {
       statusIndicator.className = 'sync-status-indicator';
     }
-    if (statusText) statusText.textContent = '🟢 Terhubung (Realtime)';
+    if (statusText) statusText.textContent = 'ðŸŸ¢ Terhubung (Realtime)';
   } else if (!userId) {
     if (syncPill) {
       syncPill.className = 'status-pill sync-pill connecting';
@@ -543,7 +545,7 @@ function updateFirebaseSyncStatusUI(status) {
     if (statusIndicator) {
       statusIndicator.className = 'sync-status-indicator connecting';
     }
-    if (statusText) statusText.textContent = '🟡 Belum Terdaftar';
+    if (statusText) statusText.textContent = 'ðŸŸ¡ Belum Terdaftar';
   } else if (status.error) {
     if (syncPill) {
       syncPill.className = 'status-pill sync-pill error';
@@ -553,7 +555,7 @@ function updateFirebaseSyncStatusUI(status) {
     if (statusIndicator) {
       statusIndicator.className = 'sync-status-indicator offline';
     }
-    if (statusText) statusText.textContent = '🔴 Mode Lokal (Offline)';
+    if (statusText) statusText.textContent = 'ðŸ”´ Mode Lokal (Offline)';
   } else {
     if (syncPill) {
       syncPill.className = 'status-pill sync-pill connecting';
@@ -563,7 +565,7 @@ function updateFirebaseSyncStatusUI(status) {
     if (statusIndicator) {
       statusIndicator.className = 'sync-status-indicator connecting';
     }
-    if (statusText) statusText.textContent = '🟡 Menghubungkan...';
+    if (statusText) statusText.textContent = 'ðŸŸ¡ Menghubungkan...';
   }
 }
 
@@ -794,9 +796,9 @@ function updateSafetyCapUI() {
   // Meter width
   meterFill.style.width = `${clampedPercent}%`;
 
-  // Status classification
-  if (percentage < 75) {
-    // ðŸŸ¢ AMAN
+  // Status classification (DT2 Rubrik F-05: >= 90% Waspada Kuning, > 100% Merah Tegas)
+  if (percentage < 90) {
+    // AMAN (< 90%)
     safetyStatusBadge.className = 'safety-status-badge status-safe';
     safetyStatusText.textContent = 'AMAN';
     remainingCaptionEl.textContent = 'Sisa Dompet';
@@ -804,9 +806,10 @@ function updateSafetyCapUI() {
     remainingBudgetEl.textContent = formatRupiah(remainingBudget);
     meterFill.style.background = 'linear-gradient(90deg, #10B981 0%, #059669 100%)';
     safetyAlertBanner.style.display = 'none';
+    safetyAlertBanner.className = 'safety-alert-banner';
     hasAlertedCritcal = false;
-  } else if (percentage < 95) {
-    // ðŸŸ¡ WASPADA
+  } else if (percentage <= 100) {
+    // WASPADA (>= 90% sampai <= 100%)
     safetyStatusBadge.className = 'safety-status-badge status-warning';
     safetyStatusText.textContent = 'WASPADA';
     remainingCaptionEl.textContent = 'Sisa Dompet';
@@ -814,35 +817,28 @@ function updateSafetyCapUI() {
     remainingBudgetEl.textContent = formatRupiah(remainingBudget);
     meterFill.style.background = 'linear-gradient(90deg, #F59E0B 0%, #D97706 100%)';
     safetyAlertBanner.style.display = 'flex';
+    safetyAlertBanner.className = 'safety-alert-banner alert-warning';
     safetyAlertMessage.textContent = `Awas! Belanjaan telah mencapai ${percentage.toFixed(0)}% dari batas dompet.`;
     hasAlertedCritcal = false;
   } else {
-    // ðŸ”´ KRITIS / OVER BUDGET
+    // OVER LIMIT (> 100%)
     safetyStatusBadge.className = 'safety-status-badge status-danger';
     meterFill.style.background = 'linear-gradient(90deg, #F43F5E 0%, #BE123C 100%)';
     safetyAlertBanner.style.display = 'flex';
+    safetyAlertBanner.className = 'safety-alert-banner alert-danger';
 
-    if (remainingBudget >= 0) {
-      safetyStatusText.textContent = 'KRITIS';
-      remainingCaptionEl.textContent = 'Sisa Kritis';
-      remainingBudgetEl.className = 'number-val highlight-danger';
-      remainingBudgetEl.textContent = formatRupiah(remainingBudget);
-      safetyAlertMessage.textContent = `âš ï¸ Sisa dompet kritis (${percentage.toFixed(0)}% terpakai)! Pertimbangkan barang non-esensial.`;
-    } else {
-      safetyStatusText.textContent = 'OVER LIMIT';
-      remainingCaptionEl.textContent = 'Defisit / Kurang';
-      remainingBudgetEl.className = 'number-val highlight-danger';
-      remainingBudgetEl.textContent = `-${formatRupiah(Math.abs(remainingBudget))}`;
-      safetyAlertMessage.textContent = `ðŸš¨ OVER BUDGET! Keranjang melebihi batas Rp ${formatRupiahSimple(Math.abs(remainingBudget))}. Segera keluarkan barang!`;
-    }
+    safetyStatusText.textContent = 'OVER LIMIT';
+    remainingCaptionEl.textContent = 'Defisit / Kurang';
+    remainingBudgetEl.className = 'number-val highlight-danger';
+    remainingBudgetEl.textContent = `-${formatRupiah(Math.abs(remainingBudget))}`;
+    safetyAlertMessage.textContent = 'Total belanja melebihi batas saldo dompet! Kurangi kuantitas atau batalkan barang sekunder.';
 
-    if (!hasAlertedCritcal && percentage >= 95) {
+    if (!hasAlertedCritcal) {
       playSound('warning');
       triggerHaptic(60);
       hasAlertedCritcal = true;
     }
   }
-
   // Update Shopping Bottom Dock readout
   const dockTotalSpend = document.getElementById('dockTotalSpend');
   const dockItemCount = document.getElementById('dockItemCount');
@@ -891,6 +887,8 @@ function updateCategoryPillCounts() {
 function renderCartItems() {
   const container = document.getElementById('cartItemsList');
   const emptyView = document.getElementById('emptyCartView');
+  const headerActionsRow = document.getElementById('cartHeaderActionsRow');
+  const sectionCountBadge = document.getElementById('cartSectionCountBadge');
   if (!container || !emptyView) return;
 
   const filteredItems = state.cart.filter(item => {
@@ -899,12 +897,18 @@ function renderCartItems() {
   });
 
   if (state.cart.length === 0) {
+    if (headerActionsRow) headerActionsRow.style.display = 'none';
     container.innerHTML = '';
     emptyView.style.display = 'flex';
     if (window.lucide) window.lucide.createIcons();
     return;
   } else {
     emptyView.style.display = 'none';
+    if (headerActionsRow) headerActionsRow.style.display = 'flex';
+    if (sectionCountBadge) {
+      const totalUnits = state.cart.reduce((s, i) => s + (parseFloat(i.qty) || 0), 0);
+      sectionCountBadge.textContent = `${state.cart.length} Jenis Barang (${totalUnits} Qty)`;
+    }
   }
 
   if (filteredItems.length === 0) {
@@ -943,7 +947,7 @@ function renderCartItems() {
             <button class="mini-action-btn" onclick="openEditItemModal('${item.id}')" title="Edit Item" aria-label="Edit">
               <i data-lucide="edit-3" class="icon-xs"></i>
             </button>
-            <button class="mini-action-btn btn-delete" onclick="deleteCartItem('${item.id}')" title="Hapus Item" aria-label="Hapus">
+            <button class="mini-action-btn btn-delete" onclick="confirmDeleteCartItem('${item.id}')" title="Hapus Item" aria-label="Hapus">
               <i data-lucide="trash-2" class="icon-xs"></i>
             </button>
           </div>
@@ -967,16 +971,16 @@ function renderCartItems() {
           </div>
         ` : ''}
 
-        <!-- Bottom Stepper & Realtime Subtotal -->
+        <!-- Bottom Stepper & Realtime Subtotal (Instant oninput without delay) -->
         <div class="item-bottom-row">
           <div class="stepper-control">
             <button type="button" class="stepper-btn" onclick="stepItemQty('${item.id}', -1)" aria-label="Kurang Qty">-</button>
-            <input type="number" class="stepper-input" value="${item.qty}" min="0.1" step="any" onchange="updateItemQtyInput('${item.id}', this.value)" aria-label="Kuantitas">
+            <input type="number" class="stepper-input" value="${item.qty}" min="0.1" step="any" inputmode="decimal" oninput="updateItemQtyInput('${item.id}', this.value)" aria-label="Kuantitas">
             <button type="button" class="stepper-btn" onclick="stepItemQty('${item.id}', 1)" aria-label="Tambah Qty">+</button>
           </div>
 
           <div class="item-subtotal-group">
-            <span class="unit-price-caption">${item.qty} Ã— ${formatRupiah(item.netUnitPrice)}</span>
+            <span class="unit-price-caption">${item.qty} &times; ${formatRupiah(item.netUnitPrice)}</span>
             <div class="subtotal-amount">${formatRupiah(item.subtotal)}</div>
           </div>
         </div>
@@ -1000,8 +1004,7 @@ function stepItemQty(id, delta) {
   const current = parseFloat(item.qty) || 1;
   let next = current + delta;
   if (next <= 0) {
-    // If dropping to 0, ask confirmation to remove
-    deleteCartItem(id);
+    confirmDeleteCartItem(id);
     return;
   }
 
@@ -1022,7 +1025,6 @@ function updateItemQtyInput(id, val) {
 
   const parsed = parseFloat(val);
   if (isNaN(parsed) || parsed <= 0) {
-    renderCartItems();
     return;
   }
 
@@ -1036,26 +1038,88 @@ function updateItemQtyInput(id, val) {
   updateSafetyCapUI();
 }
 
-function deleteCartItem(id) {
+// Custom Non-Blocking Confirmation Modal Helpers
+let currentConfirmAction = null;
+
+function showConfirmDialog({ title, message, confirmText = 'Lanjutkan', onConfirm }) {
+  const titleEl = document.getElementById('confirmDialogTitle');
+  const msgEl = document.getElementById('confirmDialogMessage');
+  const execBtn = document.getElementById('confirmExecuteBtn');
+
+  if (titleEl) titleEl.textContent = title;
+  if (msgEl) msgEl.textContent = message;
+  if (execBtn) execBtn.textContent = confirmText;
+
+  currentConfirmAction = onConfirm;
+  showModal('confirmActionModal');
+  playSound('warning');
+}
+
+function initConfirmDialog() {
+  const cancelBtn = document.getElementById('confirmCancelBtn');
+  const execBtn = document.getElementById('confirmExecuteBtn');
+
+  cancelBtn?.addEventListener('click', () => {
+    hideModal('confirmActionModal');
+    currentConfirmAction = null;
+    playSound('tick');
+  });
+
+  execBtn?.addEventListener('click', () => {
+    hideModal('confirmActionModal');
+    if (typeof currentConfirmAction === 'function') {
+      const action = currentConfirmAction;
+      currentConfirmAction = null;
+      action();
+    }
+  });
+}
+
+function confirmDeleteCartItem(id) {
   const item = state.cart.find(it => it.id === id);
   if (!item) return;
 
-  if (confirm(`Hapus "${item.name}" dari troli?`)) {
-    state.cart = state.cart.filter(it => it.id !== id);
-    playSound('click');
-    triggerHaptic(30);
-    saveStateToStorage();
-    if (window.FirebaseSync && window.FirebaseSync.isAvailable()) {
-      window.FirebaseSync.removeCartItem(id);
-      window.FirebaseSync.saveCart(state.cart);
+  showConfirmDialog({
+    title: 'Hapus Barang?',
+    message: `Hapus "${item.name}" dari keranjang troli?`,
+    confirmText: 'Ya, Hapus',
+    onConfirm: () => {
+      state.cart = state.cart.filter(it => it.id !== id);
+      playSound('click');
+      triggerHaptic(30);
+      saveStateToStorage();
+      if (window.FirebaseSync && window.FirebaseSync.isAvailable()) {
+        window.FirebaseSync.removeCartItem(id);
+        window.FirebaseSync.saveCart(state.cart);
+      }
+      renderCartItems();
+      updateSafetyCapUI();
+      showToast(`"${item.name}" dihapus dari troli`, 'info');
     }
-    renderCartItems();
-    updateSafetyCapUI();
-    showToast(`"${item.name}" dihapus dari troli`, 'info');
-  }
+  });
 }
 
-// ===================================================================
+function confirmClearAllCart() {
+  if (state.cart.length === 0) return;
+
+  showConfirmDialog({
+    title: 'Kosongkan Keranjang?',
+    message: `Seluruh ${state.cart.length} barang belanjaan akan dihapus dari troli. Lanjutkan?`,
+    confirmText: 'Ya, Kosongkan',
+    onConfirm: () => {
+      state.cart = [];
+      playSound('click');
+      triggerHaptic(40);
+      saveStateToStorage();
+      if (window.FirebaseSync && window.FirebaseSync.isAvailable()) {
+        window.FirebaseSync.saveCart([]);
+      }
+      renderCartItems();
+      updateSafetyCapUI();
+      showToast('Seluruh isi keranjang berhasil dikosongkan!', 'info');
+    }
+  });
+}
 // MODAL ADD / EDIT ITEM CONTROLLER
 // ===================================================================
 
@@ -1209,7 +1273,7 @@ function recalcModalItemPreview() {
 
   // Realtime Subtotal readout
   const subtotal = Math.round(qty * discCalc.netPrice);
-  document.getElementById('modalSubtotalFormula').textContent = `${qty} Ã— ${formatRupiah(discCalc.netPrice)}`;
+  document.getElementById('modalSubtotalFormula').textContent = `${qty} Ãƒâ€” ${formatRupiah(discCalc.netPrice)}`;
   document.getElementById('modalSubtotalVal').textContent = formatRupiah(subtotal);
 
   return {
@@ -1231,13 +1295,22 @@ function recalcModalItemPreview() {
 function handleSaveItemForm(e) {
   e.preventDefault();
   const calculated = recalcModalItemPreview();
+  const rawPriceInput = document.getElementById('inputUnitPrice').value;
+  const rawPrice = parseFloat(rawPriceInput);
 
-  if (!calculated.name) {
-    alert('Silakan masukkan nama produk');
+  if (!calculated.name || !calculated.name.trim()) {
+    showToast('Nama produk wajib diisi!', 'error');
+    document.getElementById('inputItemName').focus();
     return;
   }
-  if (calculated.basePrice <= 0) {
-    alert('Silakan masukkan harga satuan yang valid');
+  if (isNaN(rawPrice) || rawPrice <= 0) {
+    showToast('Harga satuan harus lebih besar dari Rp 0 (tidak boleh minus atau kosong)!', 'error');
+    document.getElementById('inputUnitPrice').focus();
+    return;
+  }
+  if (calculated.qty <= 0) {
+    showToast('Kuantitas barang harus lebih besar dari 0!', 'error');
+    document.getElementById('inputQty').focus();
     return;
   }
 
@@ -1294,8 +1367,6 @@ function handleSaveItemForm(e) {
   renderCartItems();
   updateSafetyCapUI();
 }
-
-// ===================================================================
 // AUTOCOMPLETE SUGGESTIONS FROM BENCHMARK DATABASE
 // ===================================================================
 
@@ -1535,7 +1606,7 @@ function openReceiptModal(tripId) {
   receiptPaper.innerHTML = `
     <div class="receipt-title-center">
       <h4>STRUK RESMI BELANJA BULANAN</h4>
-      <p>${escapeHtml(trip.store)} â€¢ SMART GROCERY</p>
+      <p>${escapeHtml(trip.store)} Ã¢â‚¬Â¢ SMART GROCERY</p>
       <p style="font-size: 10px; color: #64748B;">${trip.dateFormatted}</p>
     </div>
     <div class="receipt-items-table">
@@ -1556,7 +1627,7 @@ function openReceiptModal(tripId) {
     </div>
     <div class="receipt-dashed-line"></div>
     <p style="text-align: center; font-size: 10px; color: #64748B;">
-      Catatan Belanja Anak Rantau â€¢ Anti Boros
+      Catatan Belanja Anak Rantau Ã¢â‚¬Â¢ Anti Boros
     </p>
   `;
 
@@ -1568,16 +1639,16 @@ function copyReceiptText() {
   if (!activeViewingReceiptTrip) return;
   const trip = activeViewingReceiptTrip;
 
-  let text = `ðŸ›’ STRUK BELANJA - ${trip.store}\n`;
-  text += `ðŸ“… Tanggal: ${trip.dateFormatted}\n`;
+  let text = `Ã°Å¸â€ºâ€™ STRUK BELANJA - ${trip.store}\n`;
+  text += `Ã°Å¸â€œâ€¦ Tanggal: ${trip.dateFormatted}\n`;
   text += `--------------------------------\n`;
   trip.items.forEach(it => {
-    text += `â€¢ ${it.name} (${it.qty} ${it.unit}): ${formatRupiah(it.subtotal)}\n`;
+    text += `Ã¢â‚¬Â¢ ${it.name} (${it.qty} ${it.unit}): ${formatRupiah(it.subtotal)}\n`;
   });
   text += `--------------------------------\n`;
-  text += `ðŸ’° Total Belanja: ${formatRupiah(trip.totalSpent)}\n`;
-  text += `âœ¨ Total Hemat: ${formatRupiah(trip.totalSaved)}\n`;
-  text += `ðŸŽ¯ Limit Anggaran: ${formatRupiah(trip.budgetLimit)}\n`;
+  text += `Ã°Å¸â€™Â° Total Belanja: ${formatRupiah(trip.totalSpent)}\n`;
+  text += `Ã¢Å“Â¨ Total Hemat: ${formatRupiah(trip.totalSaved)}\n`;
+  text += `Ã°Å¸Å½Â¯ Limit Anggaran: ${formatRupiah(trip.budgetLimit)}\n`;
 
   navigator.clipboard.writeText(text).then(() => {
     showToast('Struk berhasil disalin ke clipboard!', 'success');
@@ -1682,7 +1753,7 @@ function renderBenchmarkList(query = '') {
     <div class="benchmark-item-row">
       <div>
         <div class="bench-name">${escapeHtml(b.name)}</div>
-        <div class="bench-spec">${CATEGORIES[b.category]?.label || 'Lainnya'} â€¢ per ${formatUnitLabel(b.unit)}</div>
+        <div class="bench-spec">${CATEGORIES[b.category]?.label || 'Lainnya'} Ã¢â‚¬Â¢ per ${formatUnitLabel(b.unit)}</div>
       </div>
       <div style="display: flex; align-items: center; gap: 8px;">
         <span class="bench-price">${formatRupiah(b.price)}</span>
@@ -1866,6 +1937,38 @@ function escapeHtml(str) {
 // EVENT LISTENERS & INITIALIZATION
 // ===================================================================
 
+function updateStoreAndDateUI() {
+  const storeSelect = document.getElementById('storeSelect');
+  const customStoreRow = document.getElementById('customStoreRow');
+  const customStoreInput = document.getElementById('customStoreInput');
+  const shoppingDateInput = document.getElementById('shoppingDateInput');
+
+  if (shoppingDateInput) {
+    shoppingDateInput.value = state.shoppingDate || new Date().toISOString().split('T')[0];
+  }
+
+  if (storeSelect) {
+    let matchedOption = false;
+    for (let opt of storeSelect.options) {
+      if (opt.value === state.store) {
+        storeSelect.value = state.store;
+        matchedOption = true;
+        break;
+      }
+    }
+
+    if (!matchedOption || state.store === 'Lainnya' || state.customStore) {
+      storeSelect.value = 'Lainnya';
+      if (customStoreRow) customStoreRow.style.display = 'block';
+      if (customStoreInput) {
+        customStoreInput.value = state.customStore || (state.store !== 'Lainnya' ? state.store : '');
+      }
+    } else {
+      if (customStoreRow) customStoreRow.style.display = 'none';
+    }
+  }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   // Load local state
   loadStateFromStorage();
@@ -1881,16 +1984,61 @@ document.addEventListener('DOMContentLoaded', () => {
   updateClock();
   setInterval(updateClock, 30000);
 
-  // Store select
+  // Store select, custom store & date picker
+  updateStoreAndDateUI();
+  initConfirmDialog();
+
   const storeSelect = document.getElementById('storeSelect');
-  if (storeSelect) {
-    storeSelect.value = state.store;
-    storeSelect.addEventListener('change', (e) => {
-      state.store = e.target.value;
-      saveStateToStorage();
-    });
+  const customStoreRow = document.getElementById('customStoreRow');
+  const customStoreInput = document.getElementById('customStoreInput');
+  const saveCustomStoreBtn = document.getElementById('saveCustomStoreBtn');
+  const shoppingDateInput = document.getElementById('shoppingDateInput');
+  const clearAllCartBtn = document.getElementById('clearAllCartBtn');
+
+  storeSelect?.addEventListener('change', (e) => {
+    const val = e.target.value;
+    if (val === 'Lainnya') {
+      if (customStoreRow) customStoreRow.style.display = 'block';
+      customStoreInput?.focus();
+      state.store = state.customStore || 'Toko Lainnya';
+    } else {
+      if (customStoreRow) customStoreRow.style.display = 'none';
+      state.store = val;
+      state.customStore = '';
+      showToast('Lokasi belanja: ' + val, 'info');
+    }
+    saveStateToStorage();
+  });
+
+  function applyCustomStore() {
+    const customName = customStoreInput?.value.trim();
+    if (!customName) {
+      showToast('Silakan ketik nama toko terlebih dahulu!', 'error');
+      customStoreInput?.focus();
+      return;
+    }
+    state.customStore = customName;
+    state.store = customName;
+    saveStateToStorage();
+    showToast('Lokasi toko disetel ke: ' + customName, 'success');
+    playSound('success');
   }
 
+  saveCustomStoreBtn?.addEventListener('click', applyCustomStore);
+  customStoreInput?.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      applyCustomStore();
+    }
+  });
+
+  shoppingDateInput?.addEventListener('change', (e) => {
+    state.shoppingDate = e.target.value;
+    saveStateToStorage();
+    showToast('Tanggal belanja aktif: ' + state.shoppingDate, 'info');
+  });
+
+  clearAllCartBtn?.addEventListener('click', confirmClearAllCart);
   // Sound toggle button
   const soundToggleBtn = document.getElementById('soundToggleBtn');
   const soundIcon = document.getElementById('soundIcon');

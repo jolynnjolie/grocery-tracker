@@ -2451,3 +2451,220 @@ input, button, select, textarea {
 }
 
 
+
+/* ===================================================================
+   DT2 ENHANCEMENTS: ERGONOMIC TOUCH TARGETS & NEW SESSION CONTROLS
+   =================================================================== */
+
+.trip-meta-bar {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 8px !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  margin-bottom: 10px !important;
+}
+
+.store-badge-picker {
+  background: var(--bg-card) !important;
+  border: 1px solid var(--border-color) !important;
+  padding: 6px 10px !important;
+  border-radius: var(--radius-full) !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  color: var(--primary-light) !important;
+  flex: 1 1 auto !important;
+  min-width: 170px !important;
+}
+
+.store-badge-picker select {
+  background: transparent !important;
+  border: none !important;
+  color: var(--text-main) !important;
+  font-size: 11.5px !important;
+  font-weight: 700 !important;
+  cursor: pointer !important;
+  outline: none !important;
+  width: 100% !important;
+}
+
+.store-badge-picker select option {
+  background-color: var(--bg-card) !important;
+  color: var(--text-main) !important;
+}
+
+.date-badge-picker {
+  background: var(--bg-card) !important;
+  border: 1px solid var(--border-color) !important;
+  padding: 5px 10px !important;
+  border-radius: var(--radius-full) !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  color: var(--accent-blue) !important;
+  min-height: 36px !important;
+}
+
+.date-badge-picker input[type="date"] {
+  background: transparent !important;
+  border: none !important;
+  color: var(--text-main) !important;
+  font-size: 11.5px !important;
+  font-weight: 600 !important;
+  font-family: var(--font-family) !important;
+  cursor: pointer !important;
+  outline: none !important;
+  color-scheme: dark !important;
+}
+
+.custom-store-row {
+  margin-bottom: 12px !important;
+}
+
+.custom-store-input-wrap {
+  display: flex !important;
+  gap: 8px !important;
+  align-items: center !important;
+  background: var(--bg-card) !important;
+  border: 1.5px solid var(--primary) !important;
+  border-radius: var(--radius-md) !important;
+  padding: 6px 12px !important;
+  box-shadow: 0 0 12px rgba(16, 185, 129, 0.2) !important;
+}
+
+.custom-store-input-wrap input {
+  flex: 1 !important;
+  background: transparent !important;
+  border: none !important;
+  color: var(--text-main) !important;
+  font-size: 12.5px !important;
+  font-weight: 600 !important;
+  outline: none !important;
+}
+
+.cart-header-actions-row {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  padding: 4px 4px 10px 4px !important;
+}
+
+.cart-items-count-badge {
+  font-size: 11.5px !important;
+  font-weight: 600 !important;
+  color: var(--text-muted) !important;
+}
+
+.btn-clear-cart-text {
+  background: transparent !important;
+  border: none !important;
+  color: var(--status-danger) !important;
+  font-size: 11.5px !important;
+  font-weight: 600 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 5px !important;
+  cursor: pointer !important;
+  padding: 6px 10px !important;
+  min-height: 44px !important;
+  border-radius: var(--radius-sm) !important;
+  transition: all 0.2s ease !important;
+}
+
+.btn-clear-cart-text:hover, .btn-clear-cart-text:active {
+  background: var(--status-danger-bg) !important;
+}
+
+/* Minimum 44x44px Touch Targets for Ergonomics */
+.stepper-btn {
+  width: 44px !important;
+  height: 44px !important;
+  min-width: 44px !important;
+  min-height: 44px !important;
+  font-size: 20px !important;
+  touch-action: manipulation !important;
+}
+
+.stepper-input {
+  width: 48px !important;
+  height: 44px !important;
+  font-size: 15px !important;
+}
+
+.stepper-control {
+  min-height: 44px !important;
+}
+
+.mini-action-btn {
+  width: 44px !important;
+  height: 44px !important;
+  min-width: 44px !important;
+  min-height: 44px !important;
+  touch-action: manipulation !important;
+}
+
+.nav-item {
+  min-height: 50px !important;
+  touch-action: manipulation !important;
+}
+
+/* Alert Banner Styling */
+.safety-alert-banner.alert-warning {
+  background: rgba(245, 158, 11, 0.16) !important;
+  border: 1px solid rgba(245, 158, 11, 0.4) !important;
+  color: #FCD34D !important;
+}
+
+.safety-alert-banner.alert-danger {
+  background: rgba(244, 63, 94, 0.2) !important;
+  border: 1.5px solid #F43F5E !important;
+  color: #FECDD3 !important;
+  box-shadow: 0 0 16px rgba(244, 63, 94, 0.35) !important;
+}
+
+/* Custom Confirmation Modal */
+.confirm-sheet {
+  max-width: 360px !important;
+  padding: 24px 20px !important;
+  border-radius: 20px !important;
+  text-align: center !important;
+}
+
+.confirm-icon-badge {
+  width: 56px !important;
+  height: 56px !important;
+  border-radius: 50% !important;
+  background: rgba(244, 63, 94, 0.15) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  margin: 0 auto 14px auto !important;
+  color: #F43F5E !important;
+  border: 1px solid rgba(244, 63, 94, 0.3) !important;
+}
+
+.confirm-dialog-heading {
+  font-size: 16px !important;
+  font-weight: 700 !important;
+  color: #FFFFFF !important;
+  margin-bottom: 8px !important;
+}
+
+.confirm-dialog-desc {
+  font-size: 13px !important;
+  color: var(--text-muted) !important;
+  line-height: 1.5 !important;
+  margin-bottom: 18px !important;
+}
+
+.btn-danger {
+  background: #E11D48 !important;
+  color: #FFFFFF !important;
+  border: none !important;
+  font-weight: 700 !important;
+}
+
+.btn-danger:hover, .btn-danger:active {
+  background: #BE123C !important;
+}

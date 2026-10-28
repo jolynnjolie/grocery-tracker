@@ -286,8 +286,10 @@ const FirebaseSync = {
         benchmarks: fullState.benchmarks || [],
         history: fullState.history || [],
         settings: {
-          budgetLimit: fullState.budgetLimit || 500000,
-          store: fullState.store || 'Superindo',
+          budgetLimit: fullState.budgetLimit || 100000,
+          store: fullState.store || 'Lotte Mart Grocery - Puri Indah',
+          customStore: fullState.customStore || '',
+          shoppingDate: fullState.shoppingDate || new Date().toISOString().split('T')[0],
           soundEnabled: fullState.soundEnabled !== false
         },
         lastUpdated: new Date().toISOString()
